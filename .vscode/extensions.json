@@ -1,0 +1,187 @@
+{
+  /*
+  https://github.com/ilaif/goplicate
+  */
+  "recommendations": [
+    // goplicate-start:always
+    "albymor.increment-selection",
+    "annsk.alignment",
+    "arahata.linter-actionlint",
+    "chdsbd.github-code-owners",
+    "christian-kohler.path-intellisense",
+    "claui.email-addresses",
+    "Cmacu.gotoanything",
+    "DavidWang.ini-for-vscode",
+    "donjayamanne.git-extension-pack",
+    "donjayamanne.githistory",
+    "dt.ghlink",
+    "eamodio.gitlens",
+    "EditorConfig.EditorConfig",
+    "elagil.pre-commit-helper",
+    "emeraldwalk.RunOnSave",
+    "ExodiusStudios.comment-anchors",
+    "fnando.linter",
+    "GitHub.copilot",
+    "GitHub.remotehub",
+    "GitHub.vscode-codeql",
+    "github.vscode-github-actions",
+    "GitHub.vscode-pull-request-github",
+    "gurumukhi.selected-lines-count",
+    "IBM.output-colorizer",
+    "kevinkyang.auto-comment-blocks",
+    "logerfo.json-trimmer",
+    "melt-inc.yamlfmt-vscode",
+    "mhutchie.git-graph",
+    "mkhl.direnv",
+    "mohsen1.prettify-json",
+    "ms-vscode-remote.remote-containers",
+    "ms-vscode-remote.vscode-remote-extensionpack",
+    "ms-vscode.test-adapter-converter",
+    "nhoizey.gremlins",
+    "oliversturm.fix-json",
+    "pflannery.vscode-versionlens",
+    "qezhu.gitlink",
+    "quicktype.quicktype",
+    "redhat.vscode-yaml",
+    "sidneys1.gitconfig",
+    "stkb.rewrap",
+    "tamasfe.even-better-toml",
+    "technosophos.vscode-make",
+    "Tyriar.sort-lines",
+    "usernamehw.errorlens",
+    "wmaurer.change-case",
+    "xshrim.txt-syntax",
+    "zardoy.fix-all-json",
+    "ziyasal.vscode-open-in-github",
+    // goplicate-end:always
+    //
+    // goplicate-start:aws
+    "bin3377.iam-policy",
+    // goplicate-end:aws
+    //
+    // goplicate-start:containers
+    "exiasr.hadolint",
+    "ms-azuretools.vscode-docker",
+    "p1c2u.docker-compose",
+    // goplicate-end:containers
+    //
+    // goplicate-start:frontend
+    "bhshawon.node-json-autocomplete",
+    "bierner.color-info",
+    "bradlc.vscode-tailwindcss",
+    "budparr.language-hugo-vscode",
+    "casualjim.gotemplate",
+    "christian-kohler.npm-intellisense",
+    "cipchk.cssrem",
+    "dbaeumer.vscode-eslint",
+    "ecmel.vscode-html-css",
+    "esbenp.prettier-vscode",
+    "felixfbecker.css-stacking-contexts",
+    "formulahendry.auto-close-tag",
+    "formulahendry.auto-rename-tag",
+    "howardzuo.vscode-npm-dependency",
+    "jasonnutter.search-node-modules",
+    "kamikillerto.vscode-colorize",
+    "karanba.npm-helper",
+    "kisstkondoros.vscode-codemetrics",
+    "MikeBovenlander.formate",
+    "miramac.vscode-exec-node",
+    "mskelton.npm-outdated",
+    "nkurasawa.vscode-ignore-prettier",
+    "Orta.vscode-jest",
+    "pranaygp.vscode-css-peek",
+    "stylelint.vscode-stylelint",
+    "wix.vscode-import-cost",
+    "Zignd.html-css-class-completion",
+    // "lior-chamla.google-fonts",
+    // "mgmcdermott.vscode-language-babel",
+    // "mrmlnc.vscode-autoprefixer",
+    // goplicate-end:frontend
+    //
+    // goplicate-start:golang
+    "akshayn.GoGet",
+    "golang.go",
+    "MaxMedia.go-prof",
+    "msyrus.go-doc",
+    "premparihar.gotestexplorer",
+    "windmilleng.vscode-go-autotest",
+    // goplicate-end:golang
+    //
+    // goplicate-start:graphql
+    "apollographql.vscode-apollo",
+    "GraphQL.vscode-graphql",
+    "GraphQL.vscode-graphql-execution",
+    "GraphQL.vscode-graphql-syntax",
+    // goplicate-end:graphql
+    //
+    // goplicate-start:iac
+    "hashicorp.hcl",
+    "hashicorp.terraform",
+    "Infracost.infracost",
+    "itayadler.terraform-ssm",
+    "kddejong.vscode-cfn-lint",
+    // goplicate-end:iac
+    //
+    // goplicate-start:markdown
+    "arr.marksman",
+    "bierner.markdown-checkbox",
+    "bierner.markdown-preview-github-styles",
+    "bierner.markdown-yaml-preamble",
+    "DavidAnson.vscode-markdownlint",
+    "fcrespo82.markdown-table-formatter",
+    "yzhang.markdown-all-in-one",
+    // goplicate-end:markdown
+    //
+    // goplicate-start:protobuf
+    "zxh404.vscode-proto3",
+    // goplicate-end:protobuf
+    //
+    // goplicate-start:python
+    "eeyore.yapf",
+    "etmoffat.pip-packages",
+    "fb-pyre-check.pyre-vscode",
+    "littlefoxteam.vscode-python-test-adapter",
+    "ms-python.debugpy",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "njpwerner.autodocstring",
+    "thebutlah.reorder-python-imports",
+    "VisualStudioExptTeam.intellicode-api-usage-examples",
+    "VisualStudioExptTeam.vscodeintellicode",
+    // goplicate-end:python
+    //
+    // goplicate-start:security
+    "1Password.op-vscode",
+    "anchoreinc.grype-vscode",
+    "AquaSecurityOfficial.trivy-vulnerability-scanner",
+    "jflbr.jwt-decoder",
+    "MS-SarifVSCode.sarif-viewer",
+    "redhat.fabric8-analytics",
+    "snyk-security.snyk-vulnerability-scanner",
+    // goplicate-end:security
+    //
+    // goplicate-start:shell
+    "foxundermoon.shell-format",
+    "jetmartin.bats",
+    "mads-hartmann.bash-ide-vscode",
+    "Remisa.shellman",
+    "rogalmic.bash-debug",
+    // goplicate-end:shell
+    //
+    // goplicate-start:wasm
+    "dtsvet.vscode-wasm",
+    // goplicate-end:wasm
+    //
+    // goplicate-start:xml
+    "redhat.vscode-xml",
+    // goplicate-end:xml
+    //
+  ],
+  "unwantedRecommendations": [
+    // goplicate-start:unwanted
+    "ms-azuretools.vscode-azureterraform",
+    "GoogleCloudTools.cloudcode",
+    "vscodevim.vim",
+    // goplicate-end:unwanted
+  ]
+}
