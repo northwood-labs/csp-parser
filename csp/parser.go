@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/nlnwa/whatwg-url/canonicalizer"
 )
 
 // Parse takes a string and returns a map of CSP directives and their values.
@@ -46,6 +47,9 @@ func Parse(policy string) (*Policy, error) {
 		directive = reWhitespace.ReplaceAllString(directive, " ")
 		kv := strings.Split(directive, " ")
 		listItem := &SourceListItem{}
+		mediaTypeItem := &MediaTypeListItem{}
+		urlReference := &URLReference{}
+		sandboxToken := &SandboxToken{}
 
 		if len(kv) > 0 {
 			key = kv[0]
@@ -74,16 +78,6 @@ func Parse(policy string) (*Policy, error) {
 		case "frame-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.FrameSource = append(parsedPolicy.FrameSource, *listItem)
-
-			// https://www.w3.org/TR/CSP2/#directive-frame-src
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"directive `%s` is deprecated; governing nested browsing contexts SHOULD "+
-						"use the `child-src` directive instead [CSP2]",
-					key,
-				),
-			)
 		case "img-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.ImageSource = append(parsedPolicy.ImageSource, *listItem)
@@ -99,11 +93,21 @@ func Parse(policy string) (*Policy, error) {
 		case "style-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.StyleSource = append(parsedPolicy.StyleSource, *listItem)
-
 		case "frame-ancestors":
 		case "plugin-types":
+			errs = multierror.Append(errs, handlePluginTypes(values, key, mediaTypeItem))
+			parsedPolicy.PluginTypes = append(parsedPolicy.PluginTypes, *mediaTypeItem)
 		case "report-uri":
+			errs = multierror.Append(errs, handleReportingURLs(values, key, urlReference))
+			parsedPolicy.ReportURI = append(parsedPolicy.ReportURI, *urlReference)
+
+			errs = multierror.Append(
+				errs,
+				fmt.Errorf("directive `%s` is deprecated; use `report-to` instead", key),
+			)
 		case "sandbox":
+			errs = multierror.Append(errs, handleSandbox(values, key, sandboxToken))
+			parsedPolicy.Sandbox = append(parsedPolicy.Sandbox, *sandboxToken)
 		default:
 			errs = multierror.Append(errs, fmt.Errorf("unknown directive `%s`", key))
 		}
@@ -176,6 +180,17 @@ func isKeywordSource(s string) bool {
 		strings.EqualFold(s, `'unsafe-eval'`)
 }
 
+// isSandboxSource checks if the string matches the keywords below.
+// https://www.w3.org/TR/CSP2/#sandbox-usage
+func isSandboxSource(s string) bool {
+	return strings.EqualFold(s, `allow-forms`) ||
+		strings.EqualFold(s, `allow-pointer-lock`) ||
+		strings.EqualFold(s, `allow-popups`) ||
+		strings.EqualFold(s, `allow-same-origin`) ||
+		strings.EqualFold(s, `allow-scripts`) ||
+		strings.EqualFold(s, `allow-top-navigation`)
+}
+
 // isNonceSource checks if the string matches the patterns below.
 //
 // nonce-value  = base64-value
@@ -202,10 +217,22 @@ func isHashSource(s string) bool {
 // https://www.iana.org/assignments/media-types/media-types.xhtml
 func isMediaType(s string) bool {
 	reMediaType := regexp.MustCompile(
-		`^(application|audio|font|example|image|message|model|multipart|text|video)/[a-zA-Z0-9_-./+]+$`,
+		`^(application|audio|font|example|image|message|model|multipart|text|video)/[a-zA-Z0-9_./+-]+$`,
 	)
 
 	return reMediaType.MatchString(s)
+}
+
+// isValidReportingURL checks if the string is a valid URL that can be used as a
+// reporting URL. Follows the rules of Google Safe Browsing.
+// https://developers.google.com/safe-browsing/v4/urls-hashing#canonicalization
+func isValidReportingURL(s string) bool {
+	_, err := canonicalizer.GoogleSafeBrowsing.Parse(s)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func handleSourceExpr(values []string, key string, listItem *SourceListItem) error {
@@ -237,6 +264,60 @@ func handleSourceExpr(values []string, key string, listItem *SourceListItem) err
 			listItem.SourceExprs = append(listItem.SourceExprs, SourceExpr{
 				HashSource: values[i],
 			})
+		default:
+			errs = multierror.Append(
+				errs,
+				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+			)
+		}
+	}
+
+	return errs
+}
+
+func handlePluginTypes(values []string, key string, mediaTypeItem *MediaTypeListItem) error {
+	var errs *multierror.Error
+
+	for i := range values {
+		switch {
+		case isMediaType(values[i]):
+			mediaTypeItem.MediaTypes = append(mediaTypeItem.MediaTypes, values[i])
+		default:
+			errs = multierror.Append(
+				errs,
+				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+			)
+		}
+	}
+
+	return errs
+}
+
+func handleReportingURLs(values []string, key string, urlReference *URLReference) error {
+	var errs *multierror.Error
+
+	for i := range values {
+		switch {
+		case isValidReportingURL(values[i]):
+			urlReference.URLs = append(urlReference.URLs, values[i])
+		default:
+			errs = multierror.Append(
+				errs,
+				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+			)
+		}
+	}
+
+	return errs
+}
+
+func handleSandbox(values []string, key string, sandboxToken *SandboxToken) error {
+	var errs *multierror.Error
+
+	for i := range values {
+		switch {
+		case isSandboxSource(values[i]):
+			sandboxToken.Allow = append(sandboxToken.Allow, values[i])
 		default:
 			errs = multierror.Append(
 				errs,

@@ -625,6 +625,330 @@ func TestIsHashSource(t *testing.T) {
 	}
 }
 
+// <https://github.com/golang/go/wiki/TableDrivenTests>
+// Grabbed a smattering of media types from the IANA list.
+// https://www.iana.org/assignments/media-types/media-types.xhtml
+func TestIsMediaType(t *testing.T) {
+	for name, tc := range map[string]struct {
+		Input    string
+		Expected bool
+	}{
+		"blank": {
+			Input:    "",
+			Expected: false,
+		},
+		"application/3gppHalForms+json": {
+			Input:    "application/3gppHalForms+json",
+			Expected: true,
+		},
+		"application/AML": {
+			Input:    "application/AML",
+			Expected: true,
+		},
+		"application/atom+xml": {
+			Input:    "application/atom+xml",
+			Expected: true,
+		},
+		"application/calendar+xml": {
+			Input:    "application/calendar+xml",
+			Expected: true,
+		},
+		"application/conference-info+xml": {
+			Input:    "application/conference-info+xml",
+			Expected: true,
+		},
+		"application/EmergencyCallData.ServiceInfo+xml": {
+			Input:    "application/EmergencyCallData.ServiceInfo+xml",
+			Expected: true,
+		},
+		"application/json": {
+			Input:    "application/json",
+			Expected: true,
+		},
+		"application/mathml-content+xml": {
+			Input:    "application/mathml-content+xml",
+			Expected: true,
+		},
+		"application/pkcs12": {
+			Input:    "application/pkcs12",
+			Expected: true,
+		},
+		"application/TETRA_ISI": {
+			Input:    "application/TETRA_ISI",
+			Expected: true,
+		},
+		"application/vnd.3gpp.access-transfer-events+xml": {
+			Input:    "application/vnd.3gpp.access-transfer-events+xml",
+			Expected: true,
+		},
+		"application/vnd.cncf.helm.chart.content.v1.tar+gzip": {
+			Input:    "application/vnd.cncf.helm.chart.content.v1.tar+gzip",
+			Expected: true,
+		},
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml": {
+			Input:    "application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml",
+			Expected: true,
+		},
+		"audio/aac": {
+			Input:    "audio/aac",
+			Expected: true,
+		},
+		"audio/ATRAC-ADVANCED-LOSSLESS": {
+			Input:    "audio/ATRAC-ADVANCED-LOSSLESS",
+			Expected: true,
+		},
+		"audio/TETRA_ACELP": {
+			Input:    "audio/TETRA_ACELP",
+			Expected: true,
+		},
+		"image/avif": {
+			Input:    "image/avif",
+			Expected: true,
+		},
+		"image/svg+xml": {
+			Input:    "image/svg+xml",
+			Expected: true,
+		},
+		"image/vnd.adobe.photoshop": {
+			Input:    "image/vnd.adobe.photoshop",
+			Expected: true,
+		},
+		"image/vnd.mozilla.apng": {
+			Input:    "image/vnd.mozilla.apng",
+			Expected: true,
+		},
+		"message/CPIM": {
+			Input:    "message/CPIM",
+			Expected: true,
+		},
+		"message/delivery-status": {
+			Input:    "message/delivery-status",
+			Expected: true,
+		},
+		"message/imdn+xml": {
+			Input:    "message/imdn+xml",
+			Expected: true,
+		},
+		"message/vnd.wfa.wsc": {
+			Input:    "message/vnd.wfa.wsc",
+			Expected: true,
+		},
+		"model/obj": {
+			Input:    "model/obj",
+			Expected: true,
+		},
+		"model/step-xml+zip": {
+			Input:    "model/step-xml+zip",
+			Expected: true,
+		},
+		"model/x3d-vrml": {
+			Input:    "model/x3d-vrml",
+			Expected: true,
+		},
+		"multipart/form-data": {
+			Input:    "multipart/form-data",
+			Expected: true,
+		},
+		"text/css": {
+			Input:    "text/css",
+			Expected: true,
+		},
+		"text/markdown": {
+			Input:    "text/markdown",
+			Expected: true,
+		},
+		"text/rfc822-headers": {
+			Input:    "text/rfc822-headers",
+			Expected: true,
+		},
+		"text/vnd.graphviz": {
+			Input:    "text/vnd.graphviz",
+			Expected: true,
+		},
+		"video/AV1": {
+			Input:    "video/AV1",
+			Expected: true,
+		},
+		"video/iso.segment": {
+			Input:    "video/iso.segment",
+			Expected: true,
+		},
+		"video/mpeg4-generic": {
+			Input:    "video/mpeg4-generic",
+			Expected: true,
+		},
+		"video/vnd.CCTV": {
+			Input:    "video/vnd.CCTV",
+			Expected: true,
+		},
+		"video/vnd.iptvforum.2dparityfec-2005": {
+			Input:    "video/vnd.iptvforum.2dparityfec-2005",
+			Expected: true,
+		},
+		"txt/plain": {
+			Input:    "txt/plain",
+			Expected: false,
+		},
+		"img/png": {
+			Input:    "img/png",
+			Expected: false,
+		},
+		"application/*": {
+			Input:    "application/*",
+			Expected: false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actual := isMediaType(tc.Input)
+
+			if actual != tc.Expected {
+				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
+			}
+		})
+	}
+}
+
+// <https://github.com/golang/go/wiki/TableDrivenTests>
+func TestIsSandboxSource(t *testing.T) {
+	for name, tc := range map[string]struct {
+		Input    string
+		Expected bool
+	}{
+		"blank": {
+			Input:    "",
+			Expected: false,
+		},
+		"allow-forms": {
+			Input:    "allow-forms",
+			Expected: true,
+		},
+		"allow-pointer-lock": {
+			Input:    "allow-pointer-lock",
+			Expected: true,
+		},
+		"allow-popups": {
+			Input:    "allow-popups",
+			Expected: true,
+		},
+		"allow-same-origin": {
+			Input:    "allow-same-origin",
+			Expected: true,
+		},
+		"allow-scripts": {
+			Input:    "allow-scripts",
+			Expected: true,
+		},
+		"allow-top-navigation": {
+			Input:    "allow-top-navigation",
+			Expected: true,
+		},
+		"ALLOW-FORMS": {
+			Input:    "ALLOW-FORMS",
+			Expected: true,
+		},
+		"ALLOW-POINTER-LOCK": {
+			Input:    "ALLOW-POINTER-LOCK",
+			Expected: true,
+		},
+		"ALLOW-POPUPS": {
+			Input:    "ALLOW-POPUPS",
+			Expected: true,
+		},
+		"ALLOW-SAME-ORIGIN": {
+			Input:    "ALLOW-SAME-ORIGIN",
+			Expected: true,
+		},
+		"ALLOW-SCRIPTS": {
+			Input:    "ALLOW-SCRIPTS",
+			Expected: true,
+		},
+		"ALLOW-TOP-NAVIGATION": {
+			Input:    "ALLOW-TOP-NAVIGATION",
+			Expected: true,
+		},
+		"allowForms": {
+			Input:    "allowForms",
+			Expected: false,
+		},
+		"allowPointerLock": {
+			Input:    "allowPointerLock",
+			Expected: false,
+		},
+		"allowPopups": {
+			Input:    "allowPopups",
+			Expected: false,
+		},
+		"allowSameOrigin": {
+			Input:    "allowSameOrigin",
+			Expected: false,
+		},
+		"allowScripts": {
+			Input:    "allowScripts",
+			Expected: false,
+		},
+		"allowTopNavigation": {
+			Input:    "allowTopNavigation",
+			Expected: false,
+		},
+		"AllowForms": {
+			Input:    "AllowForms",
+			Expected: false,
+		},
+		"AllowPointerLock": {
+			Input:    "AllowPointerLock",
+			Expected: false,
+		},
+		"AllowPopups": {
+			Input:    "AllowPopups",
+			Expected: false,
+		},
+		"AllowSameOrigin": {
+			Input:    "AllowSameOrigin",
+			Expected: false,
+		},
+		"AllowScripts": {
+			Input:    "AllowScripts",
+			Expected: false,
+		},
+		"AllowTopNavigation": {
+			Input:    "AllowTopNavigation",
+			Expected: false,
+		},
+		"allow_forms": {
+			Input:    "allow_forms",
+			Expected: false,
+		},
+		"allow_pointer_lock": {
+			Input:    "allow_pointer_lock",
+			Expected: false,
+		},
+		"allow_popups": {
+			Input:    "allow_popups",
+			Expected: false,
+		},
+		"allow_same_origin": {
+			Input:    "allow_same_origin",
+			Expected: false,
+		},
+		"allow_scripts": {
+			Input:    "allow_scripts",
+			Expected: false,
+		},
+		"allow_top_navigation": {
+			Input:    "allow_top_navigation",
+			Expected: false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actual := isSandboxSource(tc.Input)
+
+			if actual != tc.Expected {
+				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
+			}
+		})
+	}
+}
+
 /*
 Allow everything but only from the same origin
 default-src 'self';

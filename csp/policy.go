@@ -36,7 +36,7 @@ type (
 		StyleSource    []SourceListItem         `json:"style-src,omitempty"`
 		FrameAncestors []AncestorSourceListItem `json:"frame-ancestors,omitempty"`
 		PluginTypes    []MediaTypeListItem      `json:"plugin-types,omitempty"`
-		ReportURI      []URIReference           `json:"report-uri,omitempty"`
+		ReportURI      []URLReference           `json:"report-uri,omitempty"`
 		Sandbox        []SandboxToken           `json:"sandbox,omitempty"`
 	}
 
@@ -85,8 +85,21 @@ type (
 	// media-type-list   = media-type *( 1*WSP media-type )
 	// media-type        = <type from RFC 2045> "/" <subtype from RFC 2045>
 	// https://www.w3.org/TR/CSP2/#media-type-list-syntax
-	MediaTypeListItem struct{}
+	MediaTypeListItem struct {
+		MediaTypes []string `json:"mediaTypes,omitempty"`
+	}
 
-	SandboxToken struct{}
-	URIReference struct{}
+	// directive-name  = "sandbox"
+	// directive-value = "" / sandbox-token *( 1*WSP sandbox-token )
+	// sandbox-token   = <token from RFC 7230>
+	SandboxToken struct {
+		Allow []string `json:"allow,omitempty"`
+	}
+
+	// uri-reference = <URI-reference from RFC 3986>
+	// https://datatracker.ietf.org/doc/html/rfc3986
+	// https://url.spec.whatwg.org/commit-snapshots/eee49fdf4f99d59f717cbeb0bce29fda930196d4/
+	URLReference struct {
+		URLs []string `json:"urls,omitempty"`
+	}
 )
