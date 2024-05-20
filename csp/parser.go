@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/nlnwa/whatwg-url/canonicalizer"
+	"github.com/nlnwa/whatwg-url/url"
 )
 
 // Parse takes a string and returns a map of CSP directives and their values.
@@ -50,6 +50,7 @@ func Parse(policy string) (*Policy, error) {
 		mediaTypeItem := &MediaTypeListItem{}
 		urlReference := &URLReference{}
 		sandboxToken := &SandboxToken{}
+		ancestorListItem := &AncestorSourceListItem{}
 
 		if len(kv) > 0 {
 			key = kv[0]
@@ -94,6 +95,8 @@ func Parse(policy string) (*Policy, error) {
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.StyleSource = append(parsedPolicy.StyleSource, *listItem)
 		case "frame-ancestors":
+			errs = multierror.Append(errs, handleAncestorExpr(values, key, ancestorListItem))
+			parsedPolicy.FrameAncestors = append(parsedPolicy.FrameAncestors, *ancestorListItem)
 		case "plugin-types":
 			errs = multierror.Append(errs, handlePluginTypes(values, key, mediaTypeItem))
 			parsedPolicy.PluginTypes = append(parsedPolicy.PluginTypes, *mediaTypeItem)
@@ -114,28 +117,6 @@ func Parse(policy string) (*Policy, error) {
 	}
 
 	return parsedPolicy, errs.ErrorOrNil()
-}
-
-// isBase64 doesn't try to decode anything. Rather, it just checks if the string
-// matches the allowed list of characters. A value of `true` means that he
-// string is *probably* base64-encoded. A value of `false` means that the string
-// is definitely not base64-encoded.
-//
-// base64-value = 1*( ALPHA / DIGIT / "+" / "/" )*2( "=" )
-func isBase64(s string) bool {
-	reBase64 := regexp.MustCompile(`^[a-zA-Z0-9+/]*={0,2}$`)
-
-	return reBase64.MatchString(s) && len(s) > 0
-}
-
-// isAlphaDigit checks if the string is entirely ASCII, excluding non-printable
-// characters (e.g., NUL, DEL). A value of `true` means that the string is
-// comprised entirely of printable ASCII characters. A value of `false` means
-// that the string contains non-printable or non-ASCII characters.
-func isAlphaDigit(s string) bool {
-	reASCII := regexp.MustCompile(`^[a-zA-Z0-9]+$`)
-
-	return reASCII.MatchString(s)
 }
 
 // isSchemeSource checks if the string matches the defined pattern for the
@@ -224,11 +205,16 @@ func isMediaType(s string) bool {
 }
 
 // isValidReportingURL checks if the string is a valid URL that can be used as a
-// reporting URL. Follows the rules of Google Safe Browsing.
-// https://developers.google.com/safe-browsing/v4/urls-hashing#canonicalization
+// reporting URL. Implements the URL Standard (as of 2023-05-24).
+// https://url.spec.whatwg.org/commit-snapshots/eee49fdf4f99d59f717cbeb0bce29fda930196d4/
 func isValidReportingURL(s string) bool {
-	_, err := canonicalizer.GoogleSafeBrowsing.Parse(s)
+	url, err := url.Parse(s)
 	if err != nil {
+		return false
+	}
+
+	// URL fragment is not allowed.
+	if url.Href(true) != url.Href(false) {
 		return false
 	}
 
@@ -275,6 +261,34 @@ func handleSourceExpr(values []string, key string, listItem *SourceListItem) err
 	return errs
 }
 
+func handleAncestorExpr(values []string, key string, ancestorListItem *AncestorSourceListItem) error {
+	var errs *multierror.Error
+
+	for i := range values {
+		switch {
+		case values[i] == `'none'`:
+			ancestorListItem.AncestorExprs = append(ancestorListItem.AncestorExprs, AncestorExpr{
+				None: true,
+			})
+		case isSchemeSource(values[i]):
+			ancestorListItem.AncestorExprs = append(ancestorListItem.AncestorExprs, AncestorExpr{
+				SchemeSource: values[i],
+			})
+		case isHostSource(values[i]):
+			ancestorListItem.AncestorExprs = append(ancestorListItem.AncestorExprs, AncestorExpr{
+				HostSource: values[i],
+			})
+		default:
+			errs = multierror.Append(
+				errs,
+				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+			)
+		}
+	}
+
+	return errs
+}
+
 func handlePluginTypes(values []string, key string, mediaTypeItem *MediaTypeListItem) error {
 	var errs *multierror.Error
 
@@ -301,6 +315,30 @@ func handleReportingURLs(values []string, key string, urlReference *URLReference
 		case isValidReportingURL(values[i]):
 			urlReference.URLs = append(urlReference.URLs, values[i])
 		default:
+			url, err := url.Parse(values[i])
+			if err != nil {
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf("directive `%s`: could not parse as a URL: `%s`", key, values[i]),
+				)
+
+				break
+			}
+
+			if url.Scheme() == "" {
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf("directive `%s`: URL `%s` is missing a SCHEME, which is required", key, values[i]),
+				)
+			}
+
+			if url.Fragment() != "" {
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf("directive `%s`: URL `%s` includes a FRAGMENT, which is disallowed", key, values[i]),
+				)
+			}
+
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),

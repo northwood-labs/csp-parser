@@ -19,108 +19,6 @@ import (
 )
 
 // <https://github.com/golang/go/wiki/TableDrivenTests>
-func TestIsBase64(t *testing.T) {
-	for name, tc := range map[string]struct {
-		Input    string
-		Expected bool
-	}{
-		"blank": {
-			Input:    "",
-			Expected: false,
-		},
-		"rAnd0m": {
-			Input:    "rAnd0m",
-			Expected: true,
-		},
-		"xzi4zkCjuC8lZcD2UmnqDG0vurmq12W/XKM5Vd0+MlQ=": {
-			Input:    "xzi4zkCjuC8lZcD2UmnqDG0vurmq12W/XKM5Vd0+MlQ=",
-			Expected: true,
-		},
-		"nMxMqdZhkHxz5vAuW/PAoLvECzzsmeAxD/BNwG15HuA=": {
-			Input:    "nMxMqdZhkHxz5vAuW/PAoLvECzzsmeAxD/BNwG15HuA=",
-			Expected: true,
-		},
-		"5g0QXxO6NfvHJ6Uf5BK/hqQHtso8ZOdjlnbyKtYLvwc=": {
-			Input:    "5g0QXxO6NfvHJ6Uf5BK/hqQHtso8ZOdjlnbyKtYLvwc=",
-			Expected: true,
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			actual := isBase64(tc.Input)
-
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
-		})
-	}
-}
-
-// <https://github.com/golang/go/wiki/TableDrivenTests>
-func TestIsAlphaDigit(t *testing.T) {
-	for name, tc := range map[string]struct {
-		Input    string
-		Expected bool
-	}{
-		"blank": {
-			Input:    "",
-			Expected: false,
-		},
-		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789": {
-			Input:    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-			Expected: true,
-		},
-		"!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~": {
-			Input:    "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-			Expected: false,
-		},
-		"␡": {
-			Input:    "␡",
-			Expected: false,
-		},
-		"üüüüüü.de": {
-			Input:    "üüüüüü.de",
-			Expected: false,
-		},
-		"$＄": {
-			Input:    "$＄",
-			Expected: false,
-		},
-		"%％": {
-			Input:    "%％",
-			Expected: false,
-		},
-		";;": {
-			Input:    ";;",
-			Expected: false,
-		},
-		"@＠": {
-			Input:    "@＠",
-			Expected: false,
-		},
-		"£₤": {
-			Input:    "£₤",
-			Expected: false,
-		},
-		"£": {
-			Input:    "£",
-			Expected: false,
-		},
-		"ᘮᘴ": {
-			Input:    "ᘮᘴ",
-			Expected: false,
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			actual := isAlphaDigit(tc.Input)
-
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
-		})
-	}
-}
-
-// <https://github.com/golang/go/wiki/TableDrivenTests>
 func TestIsSchemeSource(t *testing.T) {
 	for name, tc := range map[string]struct {
 		Input    string
@@ -941,6 +839,47 @@ func TestIsSandboxSource(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			actual := isSandboxSource(tc.Input)
+
+			if actual != tc.Expected {
+				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
+			}
+		})
+	}
+}
+
+// <https://github.com/golang/go/wiki/TableDrivenTests>
+func TestIsValidReportingURL(t *testing.T) {
+	for name, tc := range map[string]struct {
+		Input    string
+		Expected bool
+	}{
+		"blank": {
+			Input:    "",
+			Expected: false,
+		},
+		"www.google-analytics.com": {
+			Input:    "www.google-analytics.com",
+			Expected: false,
+		},
+		"static.cloudflareinsights.com": {
+			Input:    "static.cloudflareinsights.com",
+			Expected: false,
+		},
+		"*.static.flickr.com": {
+			Input:    "*.static.flickr.com",
+			Expected: false,
+		},
+		"https://ryanparman.report-uri.com/r/d/csp/wizard": {
+			Input:    "https://ryanparman.report-uri.com/r/d/csp/wizard",
+			Expected: true,
+		},
+		"https://ryanparman.report-uri.com/r/d/csp/wizard#fail": {
+			Input:    "https://ryanparman.report-uri.com/r/d/csp/wizard#fail",
+			Expected: false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actual := isValidReportingURL(tc.Input)
 
 			if actual != tc.Expected {
 				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)

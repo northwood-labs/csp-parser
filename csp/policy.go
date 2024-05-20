@@ -80,7 +80,24 @@ type (
 	}
 
 	// https://www.w3.org/TR/CSP2/#directive-frame-ancestors
-	AncestorSourceListItem struct{}
+	AncestorSourceListItem struct {
+		AncestorExprs []AncestorExpr `json:"ancestorList,omitempty"`
+	}
+
+	// ancestor-source-list = [ ancestor-source *( 1*WSP ancestor-source ) ] / "'none'"
+	// ancestor-source      = scheme-source / host-source
+	AncestorExpr struct {
+		// 'none'
+		None bool `json:"none,omitempty"`
+
+		// scheme-source = scheme-part ":"
+		// isSchemeSource()
+		SchemeSource string `json:"schemeSource,omitempty"`
+
+		// host-source = [ scheme-part "://" ] host-part [ port-part ] [ path-part ]
+		// isHostSource()
+		HostSource string `json:"hostSource,omitempty"`
+	}
 
 	// media-type-list   = media-type *( 1*WSP media-type )
 	// media-type        = <type from RFC 2045> "/" <subtype from RFC 2045>
