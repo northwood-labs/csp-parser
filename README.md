@@ -5,7 +5,7 @@ The goal of this project is to be able to take a URL and one or more CSP headers
 This code is not a web browser, so the parts of the spec about "blocking networking requests" aren't relevant. However, calling this out as what a web browser _would do_ can be helpful.
 
 > [!CAUTION]
-> Partially working. Has complete support for CSP Level 2. CSP Level 3 has not yet been implemented.
+> Partially working. Code which parses the policy has complete support for CSP Level 2, and CSP Level 3 (Draft) support is mostly complete. Code which performs deeper evaluation of the content of the page against the CSP policy has not yet been started.
 
 Implements parsing and evaluation for [CSP2](https://www.w3.org/TR/CSP2/) (2016) and the [CSP3 working draft](https://www.w3.org/TR/2024/WD-CSP3-20240424/) (April 2024).
 
@@ -36,9 +36,8 @@ Implements parsing and evaluation for [CSP2](https://www.w3.org/TR/CSP2/) (2016)
 | [style-src-attr]                | <p>The `style-src-attr` directive governs the behaviour of style attributes.</p>                                                                                                                                                                                                                                                                                                                                                                                               |
 | [style-src-elem]                | <p>The `style-src-elem` directive governs the behaviour of styles except for styles defined in inline attributes.</p>                                                                                                                                                                                                                                                                                                                                                          |
 | [style-src]                     | <p>The `style-src` directive restricts which styles the user may applies to the protected resource.</p><p>`unsafe-inline` SHOULD be avoided in favor of [nonce-source] or [hash-source]. Affects: the `href` of a [link] element where `rel=stylesheet`; the `@import` directive; a [`Link` HTTP response header] field.</p>                                                                                                                                                   |
-| [unsafe-hashes]                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | [upgrade-insecure-requests] (e) | <p>An _extension_ to CSP; The `upgrade-insecure-requests` directive instructs the browser to load any `http:` resources over `https:` instead.</p>                                                                                                                                                                                                                                                                                                                             |
-| [webrtc]                        |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| [webrtc]                        | <p>The `webrtc` directive determines whether or not _any_ WebRTC connectivity is allowed.</p>                                                                                                                                                                                                                                                                                                                                                                                  |
 | [worker-src]                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ### Fallbacks
@@ -75,7 +74,6 @@ Processing is right-to-left, and resolving the value of [worker-src] works _slig
 * [report-uri] — Deprecated.
   * [report-to]
 * [sandbox]
-* [unsafe-hashes]
 * [upgrade-insecure-requests] — Extension has no value; treat as boolean.
 * [webrtc]
 
@@ -119,8 +117,6 @@ Processing is right-to-left, and resolving the value of [worker-src] works _slig
 [upgrade-insecure-requests]: https://www.w3.org/TR/2024/WD-CSP3-20240424/#biblio-upgrade-insecure-requests
 [webrtc]: https://www.w3.org/TR/2024/WD-CSP3-20240424/#directive-webrtc
 [worker-src]: https://www.w3.org/TR/2024/WD-CSP3-20240424/#directive-worker-src
-[strict-dynamic]: https://www.w3.org/TR/2024/WD-CSP3-20240424/#strict-dynamic-usage
-[unsafe-hashes]: https://www.w3.org/TR/2024/WD-CSP3-20240424/#unsafe-hashes-usage
 
 [`Link` HTTP response header]: https://datatracker.ietf.org/doc/html/rfc5988
 [applet]: https://html.spec.whatwg.org/multipage/obsolete.html#non-conforming-features
