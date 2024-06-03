@@ -16,6 +16,8 @@ package csp
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // <https://github.com/golang/go/wiki/TableDrivenTests>
@@ -74,11 +76,10 @@ func TestIsSchemeSource(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isSchemeSource(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -253,13 +254,152 @@ func TestIsHostSource(t *testing.T) {
 			Input:    "xn--kxae4bafwg.xn--pxaix.gr",
 			Expected: true,
 		},
+		"0.0.0.0": {
+			Input:    "0.0.0.0",
+			Expected: false,
+		},
+		"1.1.1.1": {
+			Input:    "1.1.1.1",
+			Expected: false,
+		},
+		"2.2.2.2": {
+			Input:    "2.2.2.2",
+			Expected: false,
+		},
+		"3.3.3.3": {
+			Input:    "3.3.3.3",
+			Expected: false,
+		},
+		"4.4.4.4": {
+			Input:    "4.4.4.4",
+			Expected: false,
+		},
+		"8.8.8.8": {
+			Input:    "8.8.8.8",
+			Expected: false,
+		},
+		"8.8.4.4": {
+			Input:    "8.8.4.4",
+			Expected: false,
+		},
+		"25.25.25.25": {
+			Input:    "25.25.25.25",
+			Expected: false,
+		},
+		"100.100.100.100": {
+			Input:    "100.100.100.100",
+			Expected: false,
+		},
+		"127.0.0.1": {
+			Input:    "127.0.0.1",
+			Expected: true,
+		},
+		"169.254.169.254": {
+			Input:    "169.254.169.254",
+			Expected: false,
+		},
+		"255.255.255.255": {
+			Input:    "255.255.255.255",
+			Expected: false,
+		},
+		"255.255.255.256": {
+			Input:    "255.255.255.256",
+			Expected: false,
+		},
+		"256.256.256.256": {
+			Input:    "256.256.256.256",
+			Expected: false,
+		},
+		"333.333.333.333": {
+			Input:    "333.333.333.333",
+			Expected: false,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isHostSource(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
+		})
+	}
+}
+
+// <https://github.com/golang/go/wiki/TableDrivenTests>
+func TestIsValidIPv4(t *testing.T) {
+	for name, tc := range map[string]struct {
+		Input    string
+		Expected bool
+	}{
+		"blank": {
+			Input:    "",
+			Expected: false,
+		},
+		"0.0.0.0": {
+			Input:    "0.0.0.0",
+			Expected: true,
+		},
+		"1.1.1.1": {
+			Input:    "1.1.1.1",
+			Expected: true,
+		},
+		"2.2.2.2": {
+			Input:    "2.2.2.2",
+			Expected: true,
+		},
+		"3.3.3.3": {
+			Input:    "3.3.3.3",
+			Expected: true,
+		},
+		"4.4.4.4": {
+			Input:    "4.4.4.4",
+			Expected: true,
+		},
+		"8.8.8.8": {
+			Input:    "8.8.8.8",
+			Expected: true,
+		},
+		"8.8.4.4": {
+			Input:    "8.8.4.4",
+			Expected: true,
+		},
+		"25.25.25.25": {
+			Input:    "25.25.25.25",
+			Expected: true,
+		},
+		"100.100.100.100": {
+			Input:    "100.100.100.100",
+			Expected: true,
+		},
+		"127.0.0.1": {
+			Input:    "127.0.0.1",
+			Expected: true,
+		},
+		"169.254.169.254": {
+			Input:    "169.254.169.254",
+			Expected: true,
+		},
+		"255.255.255.255": {
+			Input:    "255.255.255.255",
+			Expected: true,
+		},
+		"255.255.255.256": {
+			Input:    "255.255.255.256",
+			Expected: false,
+		},
+		"256.256.256.256": {
+			Input:    "256.256.256.256",
+			Expected: false,
+		},
+		"333.333.333.333": {
+			Input:    "333.333.333.333",
+			Expected: false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			actual := isValidIPv4(tc.Input)
+
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -274,49 +414,126 @@ func TestIsKeywordSource(t *testing.T) {
 			Input:    "",
 			Expected: false,
 		},
+
+		// Single quotes (pass)
 		"'self'": {
 			Input:    "'self'",
 			Expected: true,
 		},
-		"'unsafe-inline'": {
-			Input:    "'unsafe-inline'",
+		"'SeLF'": {
+			Input:    "'SeLF'",
+			Expected: true,
+		},
+		"'report-sample'": {
+			Input:    "'report-sample'",
+			Expected: true,
+		},
+		"'strict-dynamic'": {
+			Input:    "'strict-dynamic'",
+			Expected: true,
+		},
+		"'unsafe-allow-redirects'": {
+			Input:    "'unsafe-allow-redirects'",
 			Expected: true,
 		},
 		"'unsafe-eval'": {
 			Input:    "'unsafe-eval'",
 			Expected: true,
 		},
+		"'unsafe-hashes'": {
+			Input:    "'unsafe-hashes'",
+			Expected: true,
+		},
+		"'unsafe-inline'": {
+			Input:    "'unsafe-inline'",
+			Expected: true,
+		},
+		"'wasm-unsafe-eval'": {
+			Input:    "'wasm-unsafe-eval'",
+			Expected: true,
+		},
+
+		// Double quotes (fail)
 		`"self"`: {
 			Input:    `"self"`,
 			Expected: false,
 		},
-		`"unsafe-inline"`: {
-			Input:    `"unsafe-inline"`,
+		`"SeLF"`: {
+			Input:    `"SeLF"`,
+			Expected: false,
+		},
+		`"report-sample"`: {
+			Input:    `"report-sample"`,
+			Expected: false,
+		},
+		`"strict-dynamic"`: {
+			Input:    `"strict-dynamic"`,
+			Expected: false,
+		},
+		`"unsafe-allow-redirects"`: {
+			Input:    `"unsafe-allow-redirects"`,
 			Expected: false,
 		},
 		`"unsafe-eval"`: {
 			Input:    `"unsafe-eval"`,
 			Expected: false,
 		},
+		`"unsafe-hashes"`: {
+			Input:    `"unsafe-hashes"`,
+			Expected: false,
+		},
+		`"unsafe-inline"`: {
+			Input:    `"unsafe-inline"`,
+			Expected: false,
+		},
+		`"wasm-unsafe-eval"`: {
+			Input:    `"wasm-unsafe-eval"`,
+			Expected: false,
+		},
+
+		// No quotes (fail)
 		"self": {
 			Input:    "self",
 			Expected: false,
 		},
-		"unsafe-inline": {
-			Input:    "unsafe-inline",
+		"SeLF": {
+			Input:    "SeLF",
+			Expected: false,
+		},
+		"report-sample": {
+			Input:    "report-sample",
+			Expected: false,
+		},
+		"strict-dynamic": {
+			Input:    "strict-dynamic",
+			Expected: false,
+		},
+		"unsafe-allow-redirects": {
+			Input:    "unsafe-allow-redirects",
 			Expected: false,
 		},
 		"unsafe-eval": {
 			Input:    "unsafe-eval",
 			Expected: false,
 		},
+		"unsafe-hashes": {
+			Input:    "unsafe-hashes",
+			Expected: false,
+		},
+		"unsafe-inline": {
+			Input:    "unsafe-inline",
+			Expected: false,
+		},
+		"wasm-unsafe-eval": {
+			Input:    "wasm-unsafe-eval",
+			Expected: false,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isKeywordSource(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -363,17 +580,20 @@ func TestIsNonceSource(t *testing.T) {
 			Input:    "'nonce-r4nd0m'",
 			Expected: true,
 		},
+		"'NONCE-R4ND0M'": {
+			Input:    "'NONCE-R4ND0M'",
+			Expected: true,
+		},
 		`"nonce-r4nd0m"`: {
 			Input:    `"nonce-r4nd0m"`,
 			Expected: false,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isNonceSource(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -418,6 +638,10 @@ func TestIsHashSource(t *testing.T) {
 		},
 		"'sha256-r4nd0m'": {
 			Input:    "'sha256-r4nd0m'",
+			Expected: true,
+		},
+		"'SHA256-R4ND0M'": {
+			Input:    "'SHA256-R4ND0M'",
 			Expected: true,
 		},
 		`"sha256-r4nd0m"`: {
@@ -514,11 +738,10 @@ func TestIsHashSource(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isHashSource(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -561,6 +784,10 @@ func TestIsMediaType(t *testing.T) {
 		},
 		"application/json": {
 			Input:    "application/json",
+			Expected: true,
+		},
+		"APPLICATION/JSON": {
+			Input:    "APPLICATION/JSON",
 			Expected: true,
 		},
 		"application/mathml-content+xml": {
@@ -697,11 +924,10 @@ func TestIsMediaType(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isMediaType(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -838,11 +1064,10 @@ func TestIsSandboxSource(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isSandboxSource(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
@@ -879,59 +1104,84 @@ func TestIsValidReportingURL(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual := isValidReportingURL(tc.Input)
 
-			if actual != tc.Expected {
-				t.Errorf("Expected `%v`, but got `%v`.", tc.Expected, actual)
-			}
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }
 
-/*
-Allow everything but only from the same origin
-default-src 'self';
+// <https://github.com/golang/go/wiki/TableDrivenTests>
+func TestIsWebRTCSource(t *testing.T) {
+	for name, tc := range map[string]struct {
+		Input    string
+		Expected bool
+	}{
+		"blank": {
+			Input:    "",
+			Expected: false,
+		},
 
-Only Allow Scripts from the same origin
-script-src 'self';
+		// Single quotes (pass)
+		"'allow'": {
+			Input:    "'allow'",
+			Expected: true,
+		},
+		"'ALLoW'": {
+			Input:    "'ALLoW'",
+			Expected: true,
+		},
+		"'block'": {
+			Input:    "'block'",
+			Expected: true,
+		},
+		"'blocked'": {
+			Input:    "'blocked'",
+			Expected: false,
+		},
 
-Allow Google Analytics, Google AJAX CDN and Same Origin
-script-src 'self' www.google-analytics.com ajax.googleapis.com;
+		// Double quotes (fail)
+		`"allow"`: {
+			Input:    `"allow"`,
+			Expected: false,
+		},
+		`"ALLoW"`: {
+			Input:    `"ALLoW"`,
+			Expected: false,
+		},
+		`"block"`: {
+			Input:    `"block"`,
+			Expected: false,
+		},
+		`"blocked"`: {
+			Input:    `"blocked"`,
+			Expected: false,
+		},
 
-This policy allows images, scripts, AJAX, form actions, and CSS from the same
-origin, and does not allow any other resources to load (eg object, frame, media,
-etc). It is a good starting point for many sites.
-default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';base-uri 'self';form-action 'self'
+		// No quotes (fail)
+		"allow": {
+			Input:    "allow",
+			Expected: false,
+		},
+		"ALLoW": {
+			Input:    "ALLoW",
+			Expected: false,
+		},
+		"block": {
+			Input:    "block",
+			Expected: false,
+		},
+		"blocked": {
+			Input:    "blocked",
+			Expected: false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			actual := isWebRTCSource(tc.Input)
 
-One of the easiest ways to allow inline scripts when using CSP is to use a
-nonce. A nonce is just a random, single use string value that you add to your
-Content-Security-Policy header, like so:
-script-src js-cdn.example.com 'nonce-rAnd0m';
-
-A second approach to allow inline scripts is to use a hash, with this approach
-you compute the hash of your JavaScript code, and put the value in our CSP
-policy:
-script-src js-cdn.example.com 'sha256-xzi4zkCjuC8lZcD2UmnqDG0vurmq12W/XKM5Vd0+MlQ='
-
-One of the easiest ways to allow style tags when using CSP is to use a nonce. A
-nonce is just a random, single use string value that you add to your
-Content-Security-Policy header, like so:
-style-src css-cdn.example.com 'nonce-rAnd0m';
-
-A second approach to allow inline style is to use a hash, with this approach you
-compute the hash of your <style> tag, and put the value in our CSP policy:
-style-src css-cdn.example.com 'sha256-xyz4zkCjuC3lZcD2UmnqDG0vurmq12W/XKM5Vd0+MlQ='
-style-src 'self' 'unsafe-hashes' 'sha256-nMxMqdZhkHxz5vAuW/PAoLvECzzsmeAxD/BNwG15HuA=';
-
-default-src 'self'; img-src https://images.example.com 'self';
-default-src 'self';script-src 'self' static.cloudflareinsights.com
-default-src 'none';script-src 'self' www.googletagmanager.com/gtag/js; connect-src www.google-analytics.com;
-default-src 'self';font-src fonts.gstatic.com;style-src 'self' fonts.googleapis.com
-default-src 'self';font-src fonts.gstatic.com;style-src 'self' fonts.googleapis.com;style-src 'self' yourmom.com
-script-src maps.googleapis.com;img-src data: maps.gstatic.com *.googleapis.com *.ggpht.com
-script-src 'self' platform.twitter.com syndication.twitter.com; style-src 'self' 'sha256-5g0QXxO6NfvHJ6Uf5BK/hqQHtso8ZOdjlnbyKtYLvwc='; frame-src 'self' platform.twitter.com
-
-https://content-security-policy.com/examples/multiple-csp-headers/
-
-default-src 'self' blob: cdn.ryanparman.com; connect-src 'self' cdn.ryanparman.com embedr.flickr.com; frame-src cdn.ryanparman.com embed.music.apple.com platform.twitter.com syndication.twitter.com www.google.com www.instagram.com www.youtube.com; img-src 'self' 'unsafe-inline' data: cdn.ryanparman.com *.static.flickr.com *.staticflickr.com media.githubusercontent.com pbs.twimg.com platform.twitter.com s3.amazonaws.com stats.g.doubleclick.net syndication.twitter.com web.archive.org www.google-analytics.com www.google.com www.googletagmanager.com www.google.co.in; media-src 'self' blob: ryanparman.com cdn.ryanparman.com *.http.atlas.cdn.yimg.com s3.amazonaws.com www.flickr.com cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' ajax.cloudflare.com cdn.ryanparman.com cdn.jsdelivr.net cdn.syndication.twimg.com embedr.flickr.com gist.github.com platform.twitter.com widgets.flickr.com www.google-analytics.com www.googletagmanager.com www.instagram.com; script-src-elem 'unsafe-inline' cdn.ryanparman.com ajax.cloudflare.com www.googletagmanager.com www.google-analytics.com; style-src 'self' 'unsafe-inline' cdn.ryanparman.com github.githubassets.com platform.twitter.com; font-src 'self' data: cdn.ryanparman.com; style-src-attr 'unsafe-inline'; report-uri https://ryanparman.report-uri.com/r/d/csp/wizard; upgrade-insecure-requests; block-all-mixed-content
-*/
+			assert.Equalf(tc.Expected, actual, "Expected `%v`, but got `%v`.", tc.Expected, actual)
+		})
+	}
+}

@@ -23,7 +23,8 @@ import (
 	"github.com/nlnwa/whatwg-url/url"
 )
 
-// Parse takes a string and returns a map of CSP directives and their values.
+// Parse parses a Content Security Policy (CSP) string and returns a Policy
+// struct.
 func Parse(policy string) (*Policy, error) {
 	var (
 		key    string
@@ -50,6 +51,7 @@ func Parse(policy string) (*Policy, error) {
 		mediaTypeItem := &MediaTypeListItem{}
 		urlReference := &URLReference{}
 		sandboxToken := &SandboxToken{}
+		webrtcToken := &WebRTCToken{}
 		ancestorListItem := &AncestorSourceListItem{}
 
 		if len(kv) > 0 {
@@ -58,6 +60,10 @@ func Parse(policy string) (*Policy, error) {
 		}
 
 		switch strings.ToLower(key) {
+		case "block-all-mixed-content":
+			parsedPolicy.BlockAllMixedContent = true
+		case "upgrade-insecure-requests":
+			parsedPolicy.UpgradeInsecureReq = true
 		case "base-uri":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.BaseURI = append(parsedPolicy.BaseURI, *listItem)
@@ -82,6 +88,9 @@ func Parse(policy string) (*Policy, error) {
 		case "img-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.ImageSource = append(parsedPolicy.ImageSource, *listItem)
+		case "manifest-src":
+			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+			parsedPolicy.ManifestSource = append(parsedPolicy.ManifestSource, *listItem)
 		case "media-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.MediaSource = append(parsedPolicy.MediaSource, *listItem)
@@ -91,26 +100,61 @@ func Parse(policy string) (*Policy, error) {
 		case "script-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.ScriptSource = append(parsedPolicy.ScriptSource, *listItem)
+		case "script-src-attr":
+			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+			parsedPolicy.ScriptSourceAttr = append(parsedPolicy.ScriptSourceAttr, *listItem)
+		case "script-src-elem":
+			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+			parsedPolicy.ScriptSourceElem = append(parsedPolicy.ScriptSourceElem, *listItem)
 		case "style-src":
 			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 			parsedPolicy.StyleSource = append(parsedPolicy.StyleSource, *listItem)
+		case "style-src-attr":
+			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+			parsedPolicy.StyleSourceAttr = append(parsedPolicy.StyleSourceAttr, *listItem)
+		case "style-src-elem":
+			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+			parsedPolicy.StyleSourceElem = append(parsedPolicy.StyleSourceElem, *listItem)
+		case "worker-src":
+			errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+			parsedPolicy.WorkerSource = append(parsedPolicy.WorkerSource, *listItem)
 		case "frame-ancestors":
 			errs = multierror.Append(errs, handleAncestorExpr(values, key, ancestorListItem))
 			parsedPolicy.FrameAncestors = append(parsedPolicy.FrameAncestors, *ancestorListItem)
 		case "plugin-types":
 			errs = multierror.Append(errs, handlePluginTypes(values, key, mediaTypeItem))
 			parsedPolicy.PluginTypes = append(parsedPolicy.PluginTypes, *mediaTypeItem)
+		// case "report-to":
+		// 	errs = multierror.Append(errs, handleReportingURLs(values, key, urlReference))
+		// 	parsedPolicy.ReportTo = append(parsedPolicy.ReportTo, *urlReference)
 		case "report-uri":
 			errs = multierror.Append(errs, handleReportingURLs(values, key, urlReference))
-			parsedPolicy.ReportURI = append(parsedPolicy.ReportURI, *urlReference)
+			parsedPolicy.ReportTo = append(parsedPolicy.ReportTo, *urlReference)
 
 			errs = multierror.Append(
 				errs,
-				fmt.Errorf("directive `%s` is deprecated; use `report-to` instead", key),
+				fmt.Errorf(
+					"directive `%s` is deprecated in CSP3 (Draft), but valid in CSP2; "+
+						"use this along with `report-to` and the `Reporting-Endpoints` HTTP header for modern browsers; "+
+						"see https://caniuse.com/mdn-http_headers_content-security-policy_report-to for best compat",
+					key,
+				),
 			)
 		case "sandbox":
 			errs = multierror.Append(errs, handleSandbox(values, key, sandboxToken))
 			parsedPolicy.Sandbox = append(parsedPolicy.Sandbox, *sandboxToken)
+		case "webrtc":
+			value := ""
+			if len(values) != 1 {
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf("directive `%s` may only have a single value", key),
+				)
+			}
+
+			value = values[0]
+			errs = multierror.Append(errs, handleWebRTC(value, key, webrtcToken))
+			parsedPolicy.WebRTC = *webrtcToken
 		default:
 			errs = multierror.Append(errs, fmt.Errorf("unknown directive `%s`", key))
 		}
@@ -134,12 +178,12 @@ func isSchemeSource(s string) bool {
 // isHostSource checks if the string matches the defined pattern as documented
 // below. See CSP Level 2, § 4.2.2. "Matching Source Expressions"
 //
-// host-source = [ scheme-part "://" ] host-part [ port-part ] [ path-part ]
-// scheme-part = <scheme production from RFC 3986, section 3.1>
-// host-part   = "*" / [ "*." ] 1*host-char *( "." 1*host-char )
+// host-source = [ scheme-part "://" ] host-part [ ":" port-part ] [ path-part ]
+// scheme_part = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+// host-part   = "*" / [ "*." ] 1*host-char *( "." 1*host-char ) [ "." ]
 // host-char   = ALPHA / DIGIT / "-"
-// path-part   = <path production from RFC 3986, section 3.3>
-// port-part   = ":" ( 1*DIGIT / "*" )
+// path-part   = <https://datatracker.ietf.org/doc/html/rfc3986#section-3.3>
+// port-part   = 1*DIGIT / "*"
 //
 // https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
 // https://www.w3.org/TR/CSP2/#match-source-expression
@@ -149,20 +193,41 @@ func isHostSource(s string) bool {
 		`^([a-zA-Z][a-zA-Z0-9+-.]*://)?(\*|(\*)?\.?([a-zA-Z0-9-]+))+(:(\*|[0-9]+))?(/[^/]+)*$`,
 	)
 
-	return reHostSource.MatchString(s)
+	reIPv4Dumb := regexp.MustCompile(`^(([0-9]{1,3}[.]){3}[0-9]{1,3})$`)
+
+	return s == "127.0.0.1" || (reHostSource.MatchString(s) && !reIPv4Dumb.MatchString(s))
+}
+
+// isValidIPv4 checks if the string is a valid IPv4 address. Allows IP
+// "addresses" that are part of CIDR syntax (e.g., `.0`).
+//
+// https://regex101.com/r/9mNoiZ/1
+func isValidIPv4(s string) bool {
+	reIPv4 := regexp.MustCompile(
+		`^(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.]` +
+			`(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})$`,
+	)
+
+	return reIPv4.MatchString(s)
 }
 
 // isKeywordSource checks if the string matches the keywords and quotations
 // below.
 //
-// keyword-source = "'self'" / "'unsafe-inline'" / "'unsafe-eval'"
+// <https://www.w3.org/TR/2024/WD-CSP3-20240424/#grammardef-keyword-source>
 func isKeywordSource(s string) bool {
-	return strings.EqualFold(s, `'self'`) || strings.EqualFold(s, `'unsafe-inline'`) ||
-		strings.EqualFold(s, `'unsafe-eval'`)
+	return strings.EqualFold(s, `'self'`) ||
+		strings.EqualFold(s, `'report-sample'`) ||
+		strings.EqualFold(s, `'strict-dynamic'`) ||
+		strings.EqualFold(s, `'unsafe-eval'`) ||
+		strings.EqualFold(s, `'unsafe-hashes'`) ||
+		strings.EqualFold(s, `'unsafe-inline'`) ||
+		strings.EqualFold(s, `'unsafe-allow-redirects'`) ||
+		strings.EqualFold(s, `'wasm-unsafe-eval'`)
 }
 
 // isSandboxSource checks if the string matches the keywords below.
-// https://www.w3.org/TR/CSP2/#sandbox-usage
+// <https://www.w3.org/TR/CSP2/#sandbox-usage>
 func isSandboxSource(s string) bool {
 	return strings.EqualFold(s, `allow-forms`) ||
 		strings.EqualFold(s, `allow-pointer-lock`) ||
@@ -177,7 +242,7 @@ func isSandboxSource(s string) bool {
 // nonce-value  = base64-value
 // nonce-source = "'nonce-" nonce-value "'"
 func isNonceSource(s string) bool {
-	reNonceSource := regexp.MustCompile(`^'nonce-[a-zA-Z0-9+/]*={0,2}'$`)
+	reNonceSource := regexp.MustCompile(`^(?i)'nonce-[a-zA-Z0-9+/]*={0,2}'$`)
 
 	return reNonceSource.MatchString(s) && len(s) > 9
 }
@@ -188,7 +253,7 @@ func isNonceSource(s string) bool {
 // hash-algo   = "sha256" / "sha384" / "sha512"
 // hash-source = "'" hash-algo "-" hash-value "'"
 func isHashSource(s string) bool {
-	reHashSource := regexp.MustCompile(`^'sha(256|384|512)-[a-zA-Z0-9+/]*={0,2}'$`)
+	reHashSource := regexp.MustCompile(`^(?i)'sha(256|384|512)-[a-zA-Z0-9+/]*={0,2}'$`)
 
 	return reHashSource.MatchString(s) && len(s) > 10
 }
@@ -198,7 +263,7 @@ func isHashSource(s string) bool {
 // https://www.iana.org/assignments/media-types/media-types.xhtml
 func isMediaType(s string) bool {
 	reMediaType := regexp.MustCompile(
-		`^(application|audio|font|example|image|message|model|multipart|text|video)/[a-zA-Z0-9_./+-]+$`,
+		`^(?i)(application|audio|font|example|image|message|model|multipart|text|video)/[a-zA-Z0-9_./+-]+$`,
 	)
 
 	return reMediaType.MatchString(s)
@@ -221,9 +286,16 @@ func isValidReportingURL(s string) bool {
 	return true
 }
 
+// isWebRTCSource checks if the string matches the keywords below.
+func isWebRTCSource(s string) bool {
+	return strings.EqualFold(s, `'allow'`) || strings.EqualFold(s, `'block'`)
+}
+
 func handleSourceExpr(values []string, key string, listItem *SourceListItem) error {
 	var errs *multierror.Error
 
+	// source-expression = scheme-source / host-source / keyword-source
+	//                     / nonce-source / hash-source
 	for i := range values {
 		switch {
 		case values[i] == `'none'`:
@@ -367,29 +439,18 @@ func handleSandbox(values []string, key string, sandboxToken *SandboxToken) erro
 	return errs
 }
 
-// As defined above, special URL schemes that refer to specific pieces of unique
-// content, such as "data:", "blob:" and "filesystem:" are excluded from
-// matching a policy of * and must be explicitly listed.
+func handleWebRTC(value, key string, webrtcToken *WebRTCToken) error {
+	var errs *multierror.Error
 
-// Especially for the default-src and script-src directives, policy authors
-// should be aware that allowing "data:" URLs is equivalent to unsafe-inline and
-// allowing "blob:" or "filesystem:" URLs is equivalent to unsafe-eval.
+	switch {
+	case isWebRTCSource(value):
+		webrtcToken.Value = value
+	default:
+		errs = multierror.Append(
+			errs,
+			fmt.Errorf("directive `%s` has an invalid value `%s`", key, value),
+		)
+	}
 
-// 4.2.2.3. Paths and Redirects
-
-// In order to protect against Cross-Site Scripting (XSS), web application
-// authors SHOULD include: both the script-src and object-src directives, or
-// include a default-src directive, which covers both scripts and plugins.
-
-// In either case, authors SHOULD NOT include either 'unsafe-inline' or data: as
-// valid sources in their policies. Both enable XSS attacks by allowing code to
-// be included directly in the document itself; they are best avoided
-// completely.
-
-// connect-src example.com
-// All of the following will fail with the preceding directive in place:
-// * new WebSocket("wss://evil.com/");
-// * (new XMLHttpRequest()).open("GET", "https://evil.com/", true);
-// * new EventSource("https://evil.com");
-
-// 7.7.2. Multiple Host Source Values
+	return errs
+}

@@ -20,24 +20,32 @@ type (
 	//
 	// https://www.w3.org/TR/CSP2/#source-list-syntax
 	Policy struct {
-		Info map[string]Info `json:"info,omitempty"`
-
-		BaseURI        []SourceListItem         `json:"base-uri,omitempty"`
-		ChildSource    []SourceListItem         `json:"child-src,omitempty"`
-		ConnectSource  []SourceListItem         `json:"connect-src,omitempty"`
-		DefaultSource  []SourceListItem         `json:"default-src,omitempty"`
-		FontSource     []SourceListItem         `json:"font-src,omitempty"`
-		FormAction     []SourceListItem         `json:"form-action,omitempty"`
-		FrameSource    []SourceListItem         `json:"frame-src,omitempty"`
-		ImageSource    []SourceListItem         `json:"img-src,omitempty"`
-		MediaSource    []SourceListItem         `json:"media-src,omitempty"`
-		ObjectSource   []SourceListItem         `json:"object-src,omitempty"`
-		ScriptSource   []SourceListItem         `json:"script-src,omitempty"`
-		StyleSource    []SourceListItem         `json:"style-src,omitempty"`
-		FrameAncestors []AncestorSourceListItem `json:"frame-ancestors,omitempty"`
-		PluginTypes    []MediaTypeListItem      `json:"plugin-types,omitempty"`
-		ReportURI      []URLReference           `json:"report-uri,omitempty"`
-		Sandbox        []SandboxToken           `json:"sandbox,omitempty"`
+		Info                 map[string]Info          `json:"info,omitempty"`
+		WebRTC               WebRTCToken              `json:"webrtc,omitempty"`
+		ChildSource          []SourceListItem         `json:"child-src,omitempty"`
+		ConnectSource        []SourceListItem         `json:"connect-src,omitempty"`
+		DefaultSource        []SourceListItem         `json:"default-src,omitempty"`
+		FontSource           []SourceListItem         `json:"font-src,omitempty"`
+		FormAction           []SourceListItem         `json:"form-action,omitempty"`
+		FrameSource          []SourceListItem         `json:"frame-src,omitempty"`
+		ImageSource          []SourceListItem         `json:"img-src,omitempty"`
+		ManifestSource       []SourceListItem         `json:"manifest-src,omitempty"`
+		MediaSource          []SourceListItem         `json:"media-src,omitempty"`
+		ObjectSource         []SourceListItem         `json:"object-src,omitempty"`
+		ScriptSource         []SourceListItem         `json:"script-src,omitempty"`
+		ScriptSourceAttr     []SourceListItem         `json:"script-src-attr,omitempty"`
+		ScriptSourceElem     []SourceListItem         `json:"script-src-elem,omitempty"`
+		StyleSource          []SourceListItem         `json:"style-src,omitempty"`
+		StyleSourceAttr      []SourceListItem         `json:"style-src-attr,omitempty"`
+		StyleSourceElem      []SourceListItem         `json:"style-src-elem,omitempty"`
+		WorkerSource         []SourceListItem         `json:"worker-src,omitempty"`
+		FrameAncestors       []AncestorSourceListItem `json:"frame-ancestors,omitempty"`
+		PluginTypes          []MediaTypeListItem      `json:"plugin-types,omitempty"`
+		ReportTo             []URLReference           `json:"report-to,omitempty"`
+		Sandbox              []SandboxToken           `json:"sandbox,omitempty"`
+		BaseURI              []SourceListItem         `json:"base-uri,omitempty"`
+		BlockAllMixedContent bool                     `json:"block-all-mixed-content,omitempty"`
+		UpgradeInsecureReq   bool                     `json:"upgrade-insecure-requests,omitempty"`
 	}
 
 	Info struct {
@@ -52,31 +60,12 @@ type (
 
 	// source-expression = scheme-source / host-source / keyword-source / nonce-source / hash-source / 'none'
 	SourceExpr struct {
-		// 'none'
-		None bool `json:"none,omitempty"`
-
-		// scheme-source = scheme-part ":"
-		// isSchemeSource()
-		SchemeSource string `json:"schemeSource,omitempty"`
-
-		// host-source = [ scheme-part "://" ] host-part [ port-part ] [ path-part ]
-		// isHostSource()
-		HostSource string `json:"hostSource,omitempty"`
-
-		// keyword-source = "'self'" / "'unsafe-inline'" / "'unsafe-eval'"
-		// isKeywordSource()
+		SchemeSource  string `json:"schemeSource,omitempty"`
+		HostSource    string `json:"hostSource,omitempty"`
 		KeywordSource string `json:"keywordSource,omitempty"`
-
-		// nonce-value  = base64-value
-		// nonce-source = "'nonce-" nonce-value "'"
-		// isNonceSource()
-		NonceSource string `json:"nonceSource,omitempty"`
-
-		// hash-value  = base64-value
-		// hash-algo   = "sha256" / "sha384" / "sha512"
-		// hash-source = "'" hash-algo "-" hash-value "'"
-		// isHashSource()
-		HashSource string `json:"hashSource,omitempty"`
+		NonceSource   string `json:"nonceSource,omitempty"`
+		HashSource    string `json:"hashSource,omitempty"`
+		None          bool   `json:"none,omitempty"`
 	}
 
 	// https://www.w3.org/TR/CSP2/#directive-frame-ancestors
@@ -87,16 +76,9 @@ type (
 	// ancestor-source-list = [ ancestor-source *( 1*WSP ancestor-source ) ] / "'none'"
 	// ancestor-source      = scheme-source / host-source
 	AncestorExpr struct {
-		// 'none'
-		None bool `json:"none,omitempty"`
-
-		// scheme-source = scheme-part ":"
-		// isSchemeSource()
 		SchemeSource string `json:"schemeSource,omitempty"`
-
-		// host-source = [ scheme-part "://" ] host-part [ port-part ] [ path-part ]
-		// isHostSource()
-		HostSource string `json:"hostSource,omitempty"`
+		HostSource   string `json:"hostSource,omitempty"`
+		None         bool   `json:"none,omitempty"`
 	}
 
 	// media-type-list   = media-type *( 1*WSP media-type )
@@ -118,5 +100,11 @@ type (
 	// https://url.spec.whatwg.org/commit-snapshots/eee49fdf4f99d59f717cbeb0bce29fda930196d4/
 	URLReference struct {
 		URLs []string `json:"urls,omitempty"`
+	}
+
+	// directive-name  = "webrtc"
+	// directive-value = "'allow'" / "'block'"
+	WebRTCToken struct {
+		Value string `json:"value,omitempty"`
 	}
 )

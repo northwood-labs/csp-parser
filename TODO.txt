@@ -1,0 +1,41 @@
+WIP. Once this is mostly working, I'll move it to the main repo's issues.
+
+* Each policy has an associated disposition, which is either "enforce" or "report".
+* Each policy has an associated source, which is either "header" or "meta".
+* Each policy has an associated self-origin, which is an origin that is used when matching the 'self' keyword.
+* Add SARIF output format.
+* Duplicated directives should be ignored. The first takes precedence.
+* 'unsafe-inline' or data: are warnings
+* report-to will be more work
+* Inputs: URL, Headers, Policies
+
+----
+
+As defined above, special URL schemes that refer to specific pieces of unique
+content, such as "data:", "blob:" and "filesystem:" are excluded from
+matching a policy of * and must be explicitly listed.
+
+Especially for the default-src and script-src directives, policy authors
+should be aware that allowing "data:" URLs is equivalent to unsafe-inline and
+allowing "blob:" or "filesystem:" URLs is equivalent to unsafe-eval.
+
+4.2.2.3. Paths and Redirects
+
+In order to protect against Cross-Site Scripting (XSS), web application
+authors SHOULD include: both the script-src and object-src directives, or
+include a default-src directive, which covers both scripts and plugins.
+
+In either case, authors SHOULD NOT include either 'unsafe-inline' or data: as
+valid sources in their policies. Both enable XSS attacks by allowing code to
+be included directly in the document itself; they are best avoided
+completely.
+
+connect-src example.com
+All of the following will fail with the preceding directive in place:
+* new WebSocket("wss://evil.com/");
+* (new XMLHttpRequest()).open("GET", "https://evil.com/", true);
+* new EventSource("https://evil.com");
+
+7.7.2. Multiple Host Source Values
+
+----
