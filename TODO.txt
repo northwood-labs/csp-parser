@@ -6,8 +6,6 @@ WIP. Once this is mostly working, I'll move it to the main repo's issues.
 * Add SARIF output format.
 * Duplicated directives should be ignored. The first takes precedence.
 * 'unsafe-inline' or data: are warnings
-* report-to will be more work
-* Inputs: URL, Headers, Policies
 
 ----
 
@@ -37,5 +35,3 @@ All of the following will fail with the preceding directive in place:
 * new EventSource("https://evil.com");
 
 7.7.2. Multiple Host Source Values
-
-----

@@ -28,8 +28,10 @@ import (
 )
 
 var (
-	fJSON    bool
-	fVerbose bool
+	fCurrentURL         string
+	fReportingEndpoints string
+	fJSON               bool
+	fVerbose            bool
 
 	logger = log.NewWithOptions(os.Stderr, log.Options{
 		ReportTimestamp: true,
@@ -46,14 +48,16 @@ var (
 		Helps evaluate the security posture and best practices with Content Security
 		Policies (CSPs).
 
-		This is a conforming parser and evaluator for CSPs as defined in the W3C
-		specification. Supports CSP Level 2 as well as the 2024-04-24 working draft of
-		CSP Level 3.`),
-		Args: cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			// pp := debug.GetSpew()
+		This is intended to be a conforming parser and evaluator for CSP as defined in
+		the W3C specifications. Supports CSP Level 2 as well as the 2024-04-24 working
+		draft of CSP Level 3.
 
-			out, err := csp.Parse(args[0])
+		CSP policies are passed as ARGUMENTS. There is commonly only one, but multiple
+		are supported. From the command line, we recommend wrapping the entire policy in
+		double-quotes since CSP policies often contain single-quoted values.`),
+		Args: cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			out, err := csp.Parse(fCurrentURL, fReportingEndpoints, args)
 			if err != nil {
 				if merr, ok := err.(*multierror.Error); ok {
 					for _, e := range merr.Errors {
@@ -63,8 +67,6 @@ var (
 					logger.Errorf("%v", err)
 				}
 			}
-
-			// pp.Dump(out)
 
 			jsonb, err := json.MarshalIndent(out, "", "  ")
 			if err != nil {
@@ -84,6 +86,14 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.Flags().
+		StringVarP(&fCurrentURL, "current-url", "u", "", "The current URL being evaluated. May be an empty string, "+
+			"but this will disable validation of 'self' sources.")
+	rootCmd.Flags().
+		StringVarP(&fReportingEndpoints, "reporting-endpoints", "e", "", "The value of the Reporting-Endpoints "+
+			"header, used to validate the 'report-to' directive. If there is no 'report-to' directive, "+
+			"this value may be empty.")
+
 	rootCmd.PersistentFlags().BoolVarP(&fJSON, "json", "j", false, "Return results in JSON format.")
 	rootCmd.PersistentFlags().BoolVarP(&fVerbose, "verbose", "v", false, "Print verbose output.")
 }

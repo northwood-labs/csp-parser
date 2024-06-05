@@ -20,6 +20,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/maps"
 )
 
 // <https://github.com/golang/go/wiki/TableDrivenTests>
@@ -104,7 +105,9 @@ func TestParseReportingEndpoints(t *testing.T) {
 				}
 			}
 
-			assert.Truef(slices.Equal(tc.Expected, actual), "Expected `%v`, but got `%v`.", tc.Expected, actual)
+			actualKeys := maps.Keys(actual)
+
+			assert.Truef(slices.Equal(tc.Expected, actualKeys), "Expected `%v`, but got `%v`.", tc.Expected, actual)
 		})
 	}
 }

@@ -41,7 +41,8 @@ type (
 		WorkerSource         []SourceListItem         `json:"worker-src,omitempty"`
 		FrameAncestors       []AncestorSourceListItem `json:"frame-ancestors,omitempty"`
 		PluginTypes          []MediaTypeListItem      `json:"plugin-types,omitempty"`
-		ReportTo             []URLReference           `json:"report-to,omitempty"`
+		ReportTo             []ReportingRef           `json:"report-to,omitempty"`
+		ReportURI            []URLRef                 `json:"report-uri,omitempty"`
 		Sandbox              []SandboxToken           `json:"sandbox,omitempty"`
 		BaseURI              []SourceListItem         `json:"base-uri,omitempty"`
 		BlockAllMixedContent bool                     `json:"block-all-mixed-content,omitempty"`
@@ -98,8 +99,12 @@ type (
 	// uri-reference = <URI-reference from RFC 3986>
 	// https://datatracker.ietf.org/doc/html/rfc3986
 	// https://url.spec.whatwg.org/commit-snapshots/eee49fdf4f99d59f717cbeb0bce29fda930196d4/
-	URLReference struct {
+	URLRef struct {
 		URLs []string `json:"urls,omitempty"`
+	}
+
+	ReportingRef struct {
+		Tokens map[string]string `json:"tokens,omitempty"`
 	}
 
 	// directive-name  = "webrtc"

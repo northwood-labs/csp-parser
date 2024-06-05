@@ -20,17 +20,16 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
-	"golang.org/x/exp/maps"
 )
 
 // ParseReportingEndpoint checks the syntax of the `Reporting-Endpoints` header.
-func ParseReportingEndpoint(s string) ([]string, error) {
+func ParseReportingEndpoint(s string) (map[string]string, error) {
 	var (
-		values map[string]bool
+		values map[string]string
 		errs   *multierror.Error
 	)
 
-	values = make(map[string]bool)
+	values = make(map[string]string)
 	headerValue := regexp.MustCompile(`\s+`).ReplaceAllString(s, " ")
 	tokenPairList := strings.Split(headerValue, " ")
 
@@ -126,10 +125,10 @@ func ParseReportingEndpoint(s string) ([]string, error) {
 			continue
 		}
 
-		values[key] = true
+		values[key] = url
 	}
 
-	return maps.Keys(values), errs.ErrorOrNil()
+	return values, errs.ErrorOrNil()
 }
 
 // isValidToken verifies that this is a valid token per the Reporting API

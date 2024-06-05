@@ -5,9 +5,9 @@ The goal of this project is to be able to take a URL and one or more CSP headers
 This code is not a web browser, so the parts of the spec about "blocking networking requests" aren't relevant. However, calling this out as what a web browser _would do_ can be helpful.
 
 > [!CAUTION]
-> Partially working. Code which parses the policy has complete support for CSP Level 2, and CSP Level 3 (Draft) support is mostly complete. Code which performs deeper evaluation of the content of the page against the CSP policy has not yet been started.
+> Partially working. Code which parses the policy has complete support for CSP Level 2, and CSP Level 3 (Draft) support is mostly complete. Code which performs deeper evaluation of the content of the page against the CSP policy has not yet been started. **PUBLIC INTERFACES ARE NOT STABLE YET.**
 
-Implements parsing and evaluation for [CSP2](https://www.w3.org/TR/CSP2/) (2016) and the [CSP3 working draft](https://www.w3.org/TR/2024/WD-CSP3-20240424/) (April 2024).
+Implements parsing and evaluation for [CSP2] (2016) and the [CSP3 working draft][CSP3] (April 2024).
 
 ## Call-outs from the CSP specs
 
@@ -27,8 +27,8 @@ Implements parsing and evaluation for [CSP2](https://www.w3.org/TR/CSP2/) (2016)
 | [media-src]                     | <p>The `media-src` directive restricts from where the protected resource can load video, audio, and associated text tracks.</p><p>Affects: data for a video or audio clip, such as when processing the `src` attribute of a [video], [audio], [source], or [track] element.</p>                                                                                                                                                                                                |
 | [object-src]                    | <p>The `object-src` directive restricts from where the protected resource can load plugins.</p><p>Affects: data for a plugin, such as when processing the `data` attribute of an [object] element, the `src` attribute of an [embed] element, or the `code` or `archive` attributes of an [applet] element; requesting data for display in a nested browsing context in the protected resource created by an [object] or an [embed] element.</p>                               |
 | [plugin-types]                  | <p>The `plugin-types` directive restricts the set of plugins that can be invoked by the protected resource by limiting the types of resources that can be embedded.</p>                                                                                                                                                                                                                                                                                                        |
-| [report-to]                     | <p>The `report-to` directive specifies an identifier defined in the `Reporting-Endpoints` HTTP response header field to which to send reports. See [Reporting API] for more information.</p>                                                                                                                                                                                                                                                                                   |
-| [report-uri]                    | <p>The `report-uri` directive specifies a URL to which the user agent sends reports about policy violation.</p><p>Deprecated, but will require transition time. Use this along with `report-to` in the interim.</p>                                                                                                                                                                                                                                                            |
+| [report-to]                     | <p>The `report-to` directive specifies an identifier defined in the `Reporting-Endpoints` HTTP response header field to which to send reports. See [Reporting API] for more information.</p><p>[Browser support is still nascent][reporting-api-compat].</p>                                                                                                                                                                                                                   |
+| [report-uri]                    | <p>The `report-uri` directive specifies a URL to which the user agent sends reports about policy violation.</p><p>Deprecated in CSP3, but will require transition time. Use this along with `report-to` in the interim.</p>                                                                                                                                                                                                                                                    |
 | [sandbox]                       | <p>The `sandbox` directive specifies an HTML sandbox policy that the user agent applies to the protected resource. The set of flags available to the CSP directive should match those available to the [iframe] attribute.</p>                                                                                                                                                                                                                                                 |
 | [script-src-attr]               | <p>The `script-src-attr` directive applies to event handlers and, if present, it will override the `script-src` directive for relevant checks.</p>                                                                                                                                                                                                                                                                                                                             |
 | [script-src-elem]               | <p>The `script-src-elem` directive applies to all script requests and script blocks. Attributes that execute script (inline event handlers) are controlled via `script-src-attr`.</p>                                                                                                                                                                                                                                                                                          |
@@ -79,10 +79,71 @@ Processing is right-to-left, and resolving the value of [worker-src] works _slig
 
 </details>
 
+## Usage
+
+These are the inputs:
+
+1. **The current URL being evaluated.** May be an empty string, but doing so will disable validation of `'self'` expressions.
+
+1. **The `Reporting-Endpoints` HTTP reponse header value.** This is used to validate the `report-to` directive ([CSP Level 3][CSP3]). If there is no `report-to` directive, this value may be empty.
+
+    **NOTE:** Browser support is still nascent as of 2024-06-04. [CSP Level 3][CSP3] and the [Reporting API] are still draft-level specifications.
+
+1. One (or more) CSP policies. (One is _typical_, however multiple policies are allowed.)
+
+The [`hashicorp/go-multierror`](https://github.com/hashicorp/go-multierror) library is used extensively to collect errors and report them back at the same time.
+
+```go
+parseTree, err := csp.Parse(
+    // Current URL
+    "https://ryanparman.com",
+
+    // Value of the `Reporting-Endpoints` response header
+    `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+
+    // One CSP policy, as an array of one.
+    // This is ONE long concatenated string, NOT several string values.
+    []string{
+        `default-src 'self' blob: cdn.ryanparman.com; `+
+        `connect-src 'self' cdn.ryanparman.com embedr.flickr.com; frame-src cdn.ryanparman.com embed.music.apple.com platform.twitter.com syndication.twitter.com www.google.com www.instagram.com www.youtube.com; `+
+        `img-src 'self' 'unsafe-inline' data: cdn.ryanparman.com *.static.flickr.com *.staticflickr.com media.githubusercontent.com pbs.twimg.com platform.twitter.com s3.amazonaws.com stats.g.doubleclick.net syndication.twitter.com web.archive.org www.google-analytics.com www.google.com www.googletagmanager.com www.google.co.in; `+
+        `media-src 'self' blob: ryanparman.com cdn.ryanparman.com *.http.atlas.cdn.yimg.com s3.amazonaws.com www.flickr.com cdn.jsdelivr.net; `+
+        `script-src 'self' 'unsafe-inline' ajax.cloudflare.com cdn.ryanparman.com cdn.jsdelivr.net cdn.syndication.twimg.com embedr.flickr.com gist.github.com platform.twitter.com widgets.flickr.com www.google-analytics.com www.googletagmanager.com www.instagram.com; `+
+        `script-src-elem 'unsafe-inline' cdn.ryanparman.com ajax.cloudflare.com www.googletagmanager.com www.google-analytics.com; `+
+        `style-src 'self' 'unsafe-inline' cdn.ryanparman.com github.githubassets.com platform.twitter.com; `+
+        `font-src 'self' data: cdn.ryanparman.com; style-src-attr 'unsafe-inline'; `+
+        `report-uri wss://ryanparman.report-uri.com/r/d/csp/wizard; `+
+        `upgrade-insecure-requests; `+
+        `block-all-mixed-content; `+
+        `plugin-types application/pdf; `+
+        `sandbox allow-forms allow-popups; `+
+        `frame-ancestors https://alice.com https://bob.com; `+
+        `webrtc 'allow'; `+
+        `report-to endpoint-2`
+    }
+)
+
+// If we have an non-nil error...
+if err != nil {
+    // See if it's a multi-error...
+    if merr, ok := err.(*multierror.Error); ok {
+        // If so, handle each nested error.
+        for _, e := range merr.Errors {
+            logger.Errorf("%v", e)
+        }
+    } else {
+        // Otherwise, this is a regular error.
+        logger.Errorf("%v", err)
+    }
+}
+
+// Do something with `parseTree`.
+```
+
 ## References
 
-* [Content Security Policy Level 2](https://www.w3.org/TR/CSP2/) (formal recommendation)
-* [Content Security Policy Level 3](https://www.w3.org/TR/CSP3/) (working draft)
+* [Content Security Policy Level 2][CSP2] (formal recommendation)
+* [Content Security Policy Level 3][CSP3] (working draft)
 * [web.dev: Content security policy](https://web.dev/articles/csp)
 * [MDN: Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
 * [OWASP: Content security policy](https://owasp.org/www-community/controls/Content_Security_Policy)
@@ -121,6 +182,8 @@ Processing is right-to-left, and resolving the value of [worker-src] works _slig
 [`Link` HTTP response header]: https://datatracker.ietf.org/doc/html/rfc5988
 [applet]: https://html.spec.whatwg.org/multipage/obsolete.html#non-conforming-features
 [audio]: https://html.spec.whatwg.org/multipage/media.html#the-audio-element
+[CSP2]: https://www.w3.org/TR/CSP2/
+[CSP3]: https://www.w3.org/TR/2024/WD-CSP3-20240424/
 [embed]: https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-embed-element
 [EventSource]: https://html.spec.whatwg.org/multipage/server-sent-events.html
 [hash-source]: https://www.w3.org/TR/CSP2/#script-src-hash-usage
@@ -135,6 +198,7 @@ Processing is right-to-left, and resolving the value of [worker-src] works _slig
 [nonce-source]: https://www.w3.org/TR/CSP2/#script-src-nonce-usage
 [object]: https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
 [Reporting API]: https://w3c.github.io/reporting/
+[reporting-api-compat]: https://developer.mozilla.org/en-US/docs/Web/API/Reporting_API#browser_compatibility
 [setInterval()]: https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timers
 [setTimeout()]: https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timers
 [source]: https://html.spec.whatwg.org/multipage/embedded-content.html#the-source-element
