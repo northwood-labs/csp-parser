@@ -36,11 +36,15 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 	for i := range tokenPairList {
 		tokenPair := strings.TrimSpace(tokenPairList[i])
 
+		if tokenPair == "" {
+			continue
+		}
+
 		if !strings.Contains(tokenPair, "=") {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` does not contain an `=` character",
+					"[ERROR] token-pair `%s` does not contain an `=` character",
 					tokenPair,
 				),
 			)
@@ -53,7 +57,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` is missing either a key or value",
+					"[ERROR] token-pair `%s` is missing either a key or value",
 					tokenPair,
 				),
 			)
@@ -66,7 +70,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` is missing a key",
+					"[ERROR] token-pair `%s` is missing a key",
 					tokenPair,
 				),
 			)
@@ -78,7 +82,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` has a key with invalid characters",
+					"[ERROR] token-pair `%s` has a key with invalid characters",
 					tokenPair,
 				),
 			)
@@ -91,7 +95,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` is missing a URL",
+					"[ERROR] token-pair `%s` is missing a URL",
 					tokenPair,
 				),
 			)
@@ -103,7 +107,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` URL is not enclosed in double quotes",
+					"[ERROR] token-pair `%s` URL is not enclosed in double quotes",
 					tokenPair,
 				),
 			)
@@ -117,7 +121,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 			errs = multierror.Append(
 				errs,
 				fmt.Errorf(
-					"token-pair `%s` URL is not a valid URL",
+					"[ERROR] token-pair `%s` URL is not a valid URL",
 					tokenPair,
 				),
 			)

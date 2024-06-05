@@ -15,10 +15,136 @@
 package csp
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-multierror"
+	"github.com/northwood-labs/golang-utils/grammar"
 	"github.com/stretchr/testify/assert"
 )
+
+// <https://github.com/golang/go/wiki/TableDrivenTests>
+func TestParseErrors(t *testing.T) {
+	for name, tc := range map[string]struct {
+		CurrentURL         string
+		ReportingEndpoints string
+		CSP                []string
+		Error              bool
+		ErrorSubstr        string
+	}{
+		"blank": {
+			CSP:   []string{""},
+			Error: false,
+		},
+		"block-all-mixed-content": {
+			CSP:         []string{"block-all-mixed-content"},
+			Error:       true,
+			ErrorSubstr: "directive `block-all-mixed-content` is obsolete; use `upgrade-insecure-requests` instead",
+		},
+		"report-to single input, with reporting-endpoints header": {
+			ReportingEndpoints: `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+			CSP:                []string{"report-to endpoint-1"},
+			Error:              false,
+		},
+		"report-to multiple inputs, with reporting-endpoints header": {
+			ReportingEndpoints: `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+			CSP:                []string{"report-to endpoint-1 endpoint-2"},
+			Error:              true,
+			ErrorSubstr:        "may only have a single value",
+		},
+		"report-to single input, no reporting-endpoints header": {
+			ReportingEndpoints: "",
+			CSP:                []string{"report-to endpoint-1"},
+			Error:              true,
+			ErrorSubstr:        "refers to undefined reporting endpoint",
+		},
+		"report-to multiple inputs, no reporting-endpoints header (1)": {
+			ReportingEndpoints: "",
+			CSP:                []string{"report-to endpoint-1 endpoint-2"},
+			Error:              true,
+			ErrorSubstr:        "may only have a single value",
+		},
+		"report-to multiple inputs, no reporting-endpoints header (2)": {
+			ReportingEndpoints: "",
+			CSP:                []string{"report-to endpoint-1 endpoint-2"},
+			Error:              true,
+			ErrorSubstr:        "refers to undefined reporting endpoint",
+		},
+		"report-uri deprecated": {
+			CSP:         []string{"report-uri wss://ryanparman.report-uri.com/r/d/csp/wizard"},
+			Error:       true,
+			ErrorSubstr: "valid in CSP2, but will be deprecated in CSP3",
+		},
+		"report-uri invalid url (1)": {
+			CSP:         []string{"report-uri wss://ryanparman.report-uri.com/r/d/csp/wizard#fail"},
+			Error:       true,
+			ErrorSubstr: "directive `report-uri` has an invalid value",
+		},
+		"report-uri invalid url (2)": {
+			CSP:         []string{"report-uri wss://ryanparman.report-uri.com/r/d/csp/wizard#fail"},
+			Error:       true,
+			ErrorSubstr: "includes a FRAGMENT, which is disallowed",
+		},
+		"webrtc 'allow'": {
+			CSP:   []string{"webrtc 'allow'"},
+			Error: false,
+		},
+		"webrtc 'ALLoW'": {
+			CSP:   []string{"webrtc 'ALLoW'"},
+			Error: false,
+		},
+		"webrtc 'block'": {
+			CSP:   []string{"webrtc 'block'"},
+			Error: false,
+		},
+		"webrtc 'allow' 'block'": {
+			CSP:         []string{"webrtc 'allow' 'block'"},
+			Error:       true,
+			ErrorSubstr: "may only have a single value",
+		},
+		"prefetch-src https://example.com/": {
+			CSP:         []string{"prefetch-src https://example.com/"},
+			Error:       true,
+			ErrorSubstr: "was experimental in CSP3, but should now be removed",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			containsErrorMessage := false
+			errorCount := 0
+
+			_, err := Parse(tc.CurrentURL, tc.ReportingEndpoints, tc.CSP)
+			if err != nil && tc.Error == true {
+				if merr, ok := err.(*multierror.Error); ok {
+					errorCount = len(merr.Errors)
+
+					for _, e := range merr.Errors {
+						// t.Error(e)
+
+						if strings.Contains(e.Error(), tc.ErrorSubstr) {
+							containsErrorMessage = true
+						}
+					}
+				}
+			}
+
+			if errorCount > 0 && !containsErrorMessage {
+				t.Errorf(
+					"Test '%v' contained %s, but none of those error messages contained `%s`.",
+					name,
+					func() string {
+						return fmt.Sprintf(
+							"%d %s",
+							errorCount,
+							grammar.Pluralize(errorCount, "error", "errors"),
+						)
+					}(),
+					tc.ErrorSubstr,
+				)
+			}
+		})
+	}
+}
 
 // <https://github.com/golang/go/wiki/TableDrivenTests>
 func TestIsSchemeSource(t *testing.T) {

@@ -58,6 +58,8 @@ github.com/northwood-labs/cli-helpers v0.0.0-20240514222150-ad603e1e5510 h1:e9hJ
 github.com/northwood-labs/cli-helpers v0.0.0-20240514222150-ad603e1e5510/go.mod h1:0q3D+6HFCoJczVpxOoIg2cnyw5GB8My7ihU7hdggcHc=
 github.com/northwood-labs/debug v0.0.0-20240514204655-f938e2fa11e9 h1:Uuy/Obqj8z6MCER8y0geETA0894Ulo0hqM71u9WtcuQ=
 github.com/northwood-labs/debug v0.0.0-20240514204655-f938e2fa11e9/go.mod h1:fu3Hu+ET7MkBAws624vkPDnehxuY/L8AJuR3nlKw64k=
+github.com/northwood-labs/golang-utils/grammar v0.0.0-20240520164218-e622991bbbf7 h1:xmNjqIYptVcCyYaIi5AzUj3UjjuwOdEiVdgTwxUY/j4=
+github.com/northwood-labs/golang-utils/grammar v0.0.0-20240520164218-e622991bbbf7/go.mod h1:SsPqQkNGSDFpvozpTjpNmuzdqADHAv9fVFyaQPlnuLs=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=

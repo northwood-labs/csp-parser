@@ -51,13 +51,16 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 	)
 
 	if currentURL == "" {
-		errs = multierror.Append(errs, fmt.Errorf("currentURL is empty, so validation of 'self' sources is disabled"))
+		errs = multierror.Append(
+			errs,
+			fmt.Errorf("[INFO] currentURL is empty, so validation of 'self' sources is disabled"),
+		)
 	}
 
 	if reportingEndpointsHeader == "" {
 		errs = multierror.Append(
 			errs,
-			fmt.Errorf("reportingEndpointsHeader is empty, so validation of `report-to` is disabled"),
+			fmt.Errorf("[INFO] reportingEndpointsHeader is empty, so validation of `report-to` is disabled"),
 		)
 	}
 
@@ -92,13 +95,15 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			}
 
 			switch strings.ToLower(key) {
-			case "block-all-mixed-content":
-				parsedPolicy.BlockAllMixedContent = true
-			case "upgrade-insecure-requests":
-				parsedPolicy.UpgradeInsecureReq = true
 			case "base-uri":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.BaseURI = append(parsedPolicy.BaseURI, *listItem)
+			case "block-all-mixed-content":
+				parsedPolicy.BlockAllMixedContent = true
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf("[ERROR] directive `%s` is obsolete; use `upgrade-insecure-requests` instead", key),
+				)
 			case "child-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.ChildSource = append(parsedPolicy.ChildSource, *listItem)
@@ -108,12 +113,17 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "default-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.DefaultSource = append(parsedPolicy.DefaultSource, *listItem)
+			case "fenced-frame-src":
+				// @TODO
 			case "font-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.FontSource = append(parsedPolicy.FontSource, *listItem)
 			case "form-action":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.FormAction = append(parsedPolicy.FormAction, *listItem)
+			case "frame-ancestors":
+				errs = multierror.Append(errs, handleAncestorExpr(values, key, ancestorListItem))
+				parsedPolicy.FrameAncestors = append(parsedPolicy.FrameAncestors, *ancestorListItem)
 			case "frame-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.FrameSource = append(parsedPolicy.FrameSource, *listItem)
@@ -129,6 +139,48 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "object-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.ObjectSource = append(parsedPolicy.ObjectSource, *listItem)
+			case "plugin-types":
+				errs = multierror.Append(errs, handlePluginTypes(values, key, mediaTypeItem))
+				parsedPolicy.PluginTypes = append(parsedPolicy.PluginTypes, *mediaTypeItem)
+				// @TODO error
+			case "prefetch-src":
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf(
+						"[ERROR] directive `%s` was experimental in CSP3, but should now be removed from CSP policies",
+						key,
+					),
+				)
+			case "referrer":
+				// @TODO error
+			case "report-to":
+				value := ""
+				if len(values) != 1 {
+					errs = multierror.Append(
+						errs,
+						fmt.Errorf("[ERROR] directive `%s` may only have a single value", key),
+					)
+				}
+
+				value = values[0]
+				errs = multierror.Append(errs, handleReportTo(value, key, reportingEndpointsHeader, reportingReference))
+				parsedPolicy.ReportTo = append(parsedPolicy.ReportTo, *reportingReference)
+			case "report-uri":
+				errs = multierror.Append(errs, handleReportingURLs(values, key, urlReference))
+				parsedPolicy.ReportURI = append(parsedPolicy.ReportURI, *urlReference)
+
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf(
+						"[WARN] directive `%s` is valid in CSP2, but will be deprecated in CSP3",
+						key,
+					),
+				)
+			case "require-trusted-types-for":
+				// @TODO
+			case "sandbox":
+				errs = multierror.Append(errs, handleSandbox(values, key, sandboxToken))
+				parsedPolicy.Sandbox = append(parsedPolicy.Sandbox, *sandboxToken)
 			case "script-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.ScriptSource = append(parsedPolicy.ScriptSource, *listItem)
@@ -147,55 +199,27 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "style-src-elem":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.StyleSourceElem = append(parsedPolicy.StyleSourceElem, *listItem)
-			case "worker-src":
-				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
-				parsedPolicy.WorkerSource = append(parsedPolicy.WorkerSource, *listItem)
-			case "frame-ancestors":
-				errs = multierror.Append(errs, handleAncestorExpr(values, key, ancestorListItem))
-				parsedPolicy.FrameAncestors = append(parsedPolicy.FrameAncestors, *ancestorListItem)
-			case "plugin-types":
-				errs = multierror.Append(errs, handlePluginTypes(values, key, mediaTypeItem))
-				parsedPolicy.PluginTypes = append(parsedPolicy.PluginTypes, *mediaTypeItem)
-			case "report-to":
-				value := ""
-				if len(values) != 1 {
-					errs = multierror.Append(
-						errs,
-						fmt.Errorf("directive `%s` may only have a single value", key),
-					)
-				}
-
-				value = values[0]
-				errs = multierror.Append(errs, handleReportTo(value, key, reportingEndpointsHeader, reportingReference))
-				parsedPolicy.ReportTo = append(parsedPolicy.ReportTo, *reportingReference)
-			case "report-uri":
-				errs = multierror.Append(errs, handleReportingURLs(values, key, urlReference))
-				parsedPolicy.ReportURI = append(parsedPolicy.ReportURI, *urlReference)
-
-				errs = multierror.Append(
-					errs,
-					fmt.Errorf(
-						"directive `%s` is valid in CSP2, but will be deprecated in CSP3",
-						key,
-					),
-				)
-			case "sandbox":
-				errs = multierror.Append(errs, handleSandbox(values, key, sandboxToken))
-				parsedPolicy.Sandbox = append(parsedPolicy.Sandbox, *sandboxToken)
+			case "trusted-types":
+				// @TODO
+			case "upgrade-insecure-requests":
+				parsedPolicy.UpgradeInsecureReq = true
 			case "webrtc":
 				value := ""
 				if len(values) != 1 {
 					errs = multierror.Append(
 						errs,
-						fmt.Errorf("directive `%s` may only have a single value", key),
+						fmt.Errorf("[ERROR] directive `%s` may only have a single value", key),
 					)
 				}
 
 				value = values[0]
 				errs = multierror.Append(errs, handleWebRTC(value, key, webrtcToken))
 				parsedPolicy.WebRTC = *webrtcToken
+			case "worker-src":
+				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
+				parsedPolicy.WorkerSource = append(parsedPolicy.WorkerSource, *listItem)
 			default:
-				errs = multierror.Append(errs, fmt.Errorf("unknown directive `%s`", key))
+				errs = multierror.Append(errs, fmt.Errorf("[ERROR] unknown directive `%s`", key))
 			}
 		}
 
@@ -452,7 +476,7 @@ func handleSourceExpr(values []string, key string, listItem *SourceListItem) err
 		default:
 			errs = multierror.Append(
 				errs,
-				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+				fmt.Errorf("[ERROR] directive `%s` has an invalid value `%s`", key, values[i]),
 			)
 		}
 	}
@@ -501,7 +525,7 @@ func handleAncestorExpr(values []string, key string, ancestorListItem *AncestorS
 		default:
 			errs = multierror.Append(
 				errs,
-				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+				fmt.Errorf("[ERROR] directive `%s` has an invalid value `%s`", key, values[i]),
 			)
 		}
 	}
@@ -539,7 +563,7 @@ func handlePluginTypes(values []string, key string, mediaTypeItem *MediaTypeList
 		default:
 			errs = multierror.Append(
 				errs,
-				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+				fmt.Errorf("[ERROR] directive `%s` has an invalid value `%s`", key, values[i]),
 			)
 		}
 	}
@@ -578,7 +602,7 @@ func handleReportingURLs(values []string, key string, urlReference *URLRef) erro
 			if err != nil {
 				errs = multierror.Append(
 					errs,
-					fmt.Errorf("directive `%s`: could not parse as a URL: `%s`", key, values[i]),
+					fmt.Errorf("[ERROR] directive `%s`: could not parse as a URL: `%s`", key, values[i]),
 				)
 
 				break
@@ -587,20 +611,28 @@ func handleReportingURLs(values []string, key string, urlReference *URLRef) erro
 			if url.Scheme() == "" {
 				errs = multierror.Append(
 					errs,
-					fmt.Errorf("directive `%s`: URL `%s` is missing a SCHEME, which is required", key, values[i]),
+					fmt.Errorf(
+						"[ERROR] directive `%s`: URL `%s` is missing a SCHEME, which is required",
+						key,
+						values[i],
+					),
 				)
 			}
 
 			if url.Fragment() != "" {
 				errs = multierror.Append(
 					errs,
-					fmt.Errorf("directive `%s`: URL `%s` includes a FRAGMENT, which is disallowed", key, values[i]),
+					fmt.Errorf(
+						"[ERROR] directive `%s`: URL `%s` includes a FRAGMENT, which is disallowed",
+						key,
+						values[i],
+					),
 				)
 			}
 
 			errs = multierror.Append(
 				errs,
-				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+				fmt.Errorf("[ERROR] directive `%s` has an invalid value `%s`", key, values[i]),
 			)
 		}
 	}
@@ -627,7 +659,7 @@ func handleReportTo(value, key, reportingEndpointsHeader string, reportingRef *R
 	} else {
 		errs = multierror.Append(
 			errs,
-			fmt.Errorf("directive `%s` refers to undefined reporting endpoint `%s`", key, value),
+			fmt.Errorf("[ERROR] directive `%s` refers to undefined reporting endpoint `%s`", key, value),
 		)
 	}
 
@@ -663,7 +695,7 @@ func handleSandbox(values []string, key string, sandboxToken *SandboxToken) erro
 		default:
 			errs = multierror.Append(
 				errs,
-				fmt.Errorf("directive `%s` has an invalid value `%s`", key, values[i]),
+				fmt.Errorf("[ERROR] directive `%s` has an invalid value `%s`", key, values[i]),
 			)
 		}
 	}
@@ -701,7 +733,7 @@ func handleWebRTC(value, key string, webrtcToken *WebRTCToken) error {
 	default:
 		errs = multierror.Append(
 			errs,
-			fmt.Errorf("directive `%s` has an invalid value `%s`", key, value),
+			fmt.Errorf("[ERROR] directive `%s` has an invalid value `%s`", key, value),
 		)
 	}
 

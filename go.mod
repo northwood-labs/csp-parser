@@ -38,6 +38,7 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
 	github.com/northwood-labs/archstring v0.0.0-20240514202917-e9357b4b91c8 // indirect
 	github.com/northwood-labs/debug v0.0.0-20240514204655-f938e2fa11e9 // indirect
+	github.com/northwood-labs/golang-utils/grammar v0.0.0-20240520164218-e622991bbbf7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

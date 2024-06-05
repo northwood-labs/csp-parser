@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -61,16 +62,16 @@ var (
 			if err != nil {
 				if merr, ok := err.(*multierror.Error); ok {
 					for _, e := range merr.Errors {
-						logger.Errorf("%v", e)
+						handleErrorMsg(e)
 					}
 				} else {
-					logger.Errorf("%v", err)
+					handleErrorMsg(err)
 				}
 			}
 
 			jsonb, err := json.MarshalIndent(out, "", "  ")
 			if err != nil {
-				logger.Errorf("%v", err)
+				logger.Fatalf("%v", err)
 			}
 
 			fmt.Println(string(jsonb))
@@ -96,4 +97,17 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&fJSON, "json", "j", false, "Return results in JSON format.")
 	rootCmd.PersistentFlags().BoolVarP(&fVerbose, "verbose", "v", false, "Print verbose output.")
+}
+
+func handleErrorMsg(e error) {
+	switch {
+	case strings.HasPrefix(e.Error(), "[ERROR]"):
+		logger.Errorf("%v", e.Error()[8:])
+	case strings.HasPrefix(e.Error(), "[WARN]"):
+		logger.Warnf("%v", e.Error()[7:])
+	case strings.HasPrefix(e.Error(), "[INFO]"):
+		logger.Infof("%v", e.Error()[7:])
+	default:
+		logger.Errorf("%v", e.Error())
+	}
 }
