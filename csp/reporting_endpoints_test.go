@@ -40,17 +40,11 @@ func TestParseReportingEndpoints(t *testing.T) {
 			Expected: []string{},
 			Error:    false,
 		},
-		`missing-= (1)`: {
+		`missing-=`: {
 			Input:       `endpoint-1 "https://example.com/reports"`,
 			Expected:    []string{},
 			Error:       true,
-			ErrorSubstr: "token-pair `endpoint-1` does not contain an `=` character",
-		},
-		`missing-= (2)`: {
-			Input:       `endpoint-1 "https://example.com/reports"`,
-			Expected:    []string{},
-			Error:       true,
-			ErrorSubstr: "token-pair `\"https://example.com/reports\"` does not contain an `=` character",
+			ErrorSubstr: "does not contain an `=` character",
 		},
 		`missing-url`: {
 			Input:       `endpoint-1=`,
@@ -100,14 +94,20 @@ func TestParseReportingEndpoints(t *testing.T) {
 			Error:    false,
 		},
 		`duplicate-keys`: {
-			Input:    `endpoint-1="https://example.com/reports1" endpoint-1="https://example.com/reports2"`,
+			Input:    `endpoint-1="https://example.com/reports1", endpoint-1="https://example.com/reports2"`,
 			Expected: []string{"endpoint-1"},
 			Error:    false,
 		},
 		`valid-multiple-tokenpairs`: {
-			Input:    `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+			Input:    `endpoint-1="https://example.com/reports1", endpoint-2="https://example.com/reports2"`,
 			Expected: []string{"endpoint-1", "endpoint-2"},
 			Error:    false,
+		},
+		`missing-comma`: {
+			Input:       `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+			Expected:    []string{},
+			Error:       true,
+			ErrorSubstr: "appears to be missing a comma between token-pairs",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

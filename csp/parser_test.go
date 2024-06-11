@@ -42,13 +42,25 @@ func TestParseErrors(t *testing.T) {
 			Error:       true,
 			ErrorSubstr: "directive `block-all-mixed-content` is obsolete; use `upgrade-insecure-requests` instead",
 		},
-		"report-to single input, with reporting-endpoints header": {
+		"report-to single input, with reporting-endpoints header (error)": {
 			ReportingEndpoints: `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+			CSP:                []string{"report-to endpoint-1"},
+			Error:              true,
+			ErrorSubstr:        "appears to be missing a comma between token-pairs",
+		},
+		"report-to single input, with reporting-endpoints header": {
+			ReportingEndpoints: `endpoint-1="https://example.com/reports1", endpoint-2="https://example.com/reports2"`,
 			CSP:                []string{"report-to endpoint-1"},
 			Error:              false,
 		},
-		"report-to multiple inputs, with reporting-endpoints header": {
+		"report-to multiple inputs, with reporting-endpoints header (1)": {
 			ReportingEndpoints: `endpoint-1="https://example.com/reports1" endpoint-2="https://example.com/reports2"`,
+			CSP:                []string{"report-to endpoint-1 endpoint-2"},
+			Error:              true,
+			ErrorSubstr:        "appears to be missing a comma between token-pairs",
+		},
+		"report-to multiple inputs, with reporting-endpoints header (2)": {
+			ReportingEndpoints: `endpoint-1="https://example.com/reports1", endpoint-2="https://example.com/reports2"`,
 			CSP:                []string{"report-to endpoint-1 endpoint-2"},
 			Error:              true,
 			ErrorSubstr:        "may only have a single value",
@@ -103,10 +115,30 @@ func TestParseErrors(t *testing.T) {
 			Error:       true,
 			ErrorSubstr: "may only have a single value",
 		},
+		"navigate-to https://example.com/": {
+			CSP:         []string{"navigate-to https://example.com/"},
+			Error:       true,
+			ErrorSubstr: "was experimental in CSP3, but should now be removed",
+		},
 		"prefetch-src https://example.com/": {
 			CSP:         []string{"prefetch-src https://example.com/"},
 			Error:       true,
 			ErrorSubstr: "was experimental in CSP3, but should now be removed",
+		},
+		"referrer 'none'": {
+			CSP:         []string{"referrer 'none'"},
+			Error:       true,
+			ErrorSubstr: "was experimental in CSP3, but should now be removed",
+		},
+		"plugin-types application/* (1)": {
+			CSP:         []string{"plugin-types application/*"},
+			Error:       true,
+			ErrorSubstr: "is obsolete; remove this directive from the policy",
+		},
+		"plugin-types application/* (2)": {
+			CSP:         []string{"plugin-types application/*"},
+			Error:       true,
+			ErrorSubstr: "has an invalid value",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

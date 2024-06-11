@@ -30,8 +30,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 	)
 
 	values = make(map[string]string)
-	headerValue := regexp.MustCompile(`\s+`).ReplaceAllString(s, " ")
-	tokenPairList := strings.Split(headerValue, " ")
+	tokenPairList := strings.Split(s, ",")
 
 	for i := range tokenPairList {
 		tokenPair := strings.TrimSpace(tokenPairList[i])
@@ -45,6 +44,18 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 				errs,
 				fmt.Errorf(
 					"[ERROR] token-pair `%s` does not contain an `=` character",
+					tokenPair,
+				),
+			)
+
+			continue
+		}
+
+		if strings.Contains(tokenPair, " ") {
+			errs = multierror.Append(
+				errs,
+				fmt.Errorf(
+					"[ERROR] `%s` appears to be missing a comma between token-pairs",
 					tokenPair,
 				),
 			)

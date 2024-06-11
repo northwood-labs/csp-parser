@@ -107,14 +107,21 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "child-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.ChildSource = append(parsedPolicy.ChildSource, *listItem)
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf(
+						"[ERROR] directive `%s` is deprecated; use `frame-src` and/or `worker-src` instead",
+						key,
+					),
+				)
 			case "connect-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.ConnectSource = append(parsedPolicy.ConnectSource, *listItem)
 			case "default-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.DefaultSource = append(parsedPolicy.DefaultSource, *listItem)
-			case "fenced-frame-src":
-				// @TODO
+			// case "fenced-frame-src":
+			// @TODO
 			case "font-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.FontSource = append(parsedPolicy.FontSource, *listItem)
@@ -124,6 +131,7 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "frame-ancestors":
 				errs = multierror.Append(errs, handleAncestorExpr(values, key, ancestorListItem))
 				parsedPolicy.FrameAncestors = append(parsedPolicy.FrameAncestors, *ancestorListItem)
+				// Error on 'unsafe-eval' or 'unsafe-inline'
 			case "frame-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.FrameSource = append(parsedPolicy.FrameSource, *listItem)
@@ -136,13 +144,24 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "media-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.MediaSource = append(parsedPolicy.MediaSource, *listItem)
+			case "navigate-to":
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf(
+						"[ERROR] directive `%s` was experimental in CSP3, but should now be removed from CSP policies",
+						key,
+					),
+				)
 			case "object-src":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.ObjectSource = append(parsedPolicy.ObjectSource, *listItem)
 			case "plugin-types":
 				errs = multierror.Append(errs, handlePluginTypes(values, key, mediaTypeItem))
 				parsedPolicy.PluginTypes = append(parsedPolicy.PluginTypes, *mediaTypeItem)
-				// @TODO error
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf("[ERROR] directive `%s` is obsolete; remove this directive from the policy", key),
+				)
 			case "prefetch-src":
 				errs = multierror.Append(
 					errs,
@@ -152,7 +171,13 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 					),
 				)
 			case "referrer":
-				// @TODO error
+				errs = multierror.Append(
+					errs,
+					fmt.Errorf(
+						"[ERROR] directive `%s` was experimental in CSP3, but should now be removed from CSP policies",
+						key,
+					),
+				)
 			case "report-to":
 				value := ""
 				if len(values) != 1 {
@@ -176,8 +201,8 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 						key,
 					),
 				)
-			case "require-trusted-types-for":
-				// @TODO
+			// case "require-trusted-types-for":
+			// @TODO
 			case "sandbox":
 				errs = multierror.Append(errs, handleSandbox(values, key, sandboxToken))
 				parsedPolicy.Sandbox = append(parsedPolicy.Sandbox, *sandboxToken)
@@ -199,8 +224,8 @@ func Parse(currentURL, reportingEndpointsHeader string, policies []string) ([]*P
 			case "style-src-elem":
 				errs = multierror.Append(errs, handleSourceExpr(values, key, listItem))
 				parsedPolicy.StyleSourceElem = append(parsedPolicy.StyleSourceElem, *listItem)
-			case "trusted-types":
-				// @TODO
+			// case "trusted-types":
+			// @TODO
 			case "upgrade-insecure-requests":
 				parsedPolicy.UpgradeInsecureReq = true
 			case "webrtc":
