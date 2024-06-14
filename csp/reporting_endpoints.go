@@ -40,88 +40,46 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 		}
 
 		if !strings.Contains(tokenPair, "=") {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` does not contain an `=` character",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0510, tokenPair))
 
 			continue
 		}
 
 		if strings.Contains(tokenPair, " ") {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] `%s` appears to be missing a comma between token-pairs",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0511, tokenPair))
 
 			continue
 		}
 
 		token := strings.Split(tokenPair, "=")
 		if len(token) != 2 {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` is missing either a key or value",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0512, tokenPair))
 
 			continue
 		}
 
 		key := token[0]
 		if key == "" {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` is missing a key",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0513, tokenPair))
 
 			continue
 		}
 
 		if !isValidToken(key) {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` has a key with invalid characters",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0514, tokenPair))
 
 			continue
 		}
 
 		url := token[1]
 		if url == "" {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` is missing a URL",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0515, tokenPair))
 
 			continue
 		}
 
 		if url[0:1] != "\"" || url[len(url)-1:] != "\"" {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` URL is not enclosed in double quotes",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0516, tokenPair))
 
 			continue
 		}
@@ -129,13 +87,7 @@ func ParseReportingEndpoint(s string) (map[string]string, error) {
 		url = url[1 : len(url)-1]
 
 		if !isValidReportingURL(url) {
-			errs = multierror.Append(
-				errs,
-				fmt.Errorf(
-					"[ERROR] token-pair `%s` URL is not a valid URL",
-					tokenPair,
-				),
-			)
+			errs = multierror.Append(errs, fmt.Errorf(errCSP0517, tokenPair))
 
 			continue
 		}

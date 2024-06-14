@@ -140,6 +140,15 @@ func TestParseErrors(t *testing.T) {
 			Error:       true,
 			ErrorSubstr: "has an invalid value",
 		},
+		"sandbox-valid": {
+			CSP:   []string{"sandbox allow-downloads allow-forms allow-modals"},
+			Error: false,
+		},
+		"sandbox-invalid": {
+			CSP:         []string{"sandbox allow-malware"},
+			Error:       true,
+			ErrorSubstr: "directive `sandbox` has an invalid value",
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			containsErrorMessage := false
@@ -1100,8 +1109,20 @@ func TestIsSandboxSource(t *testing.T) {
 			Input:    "",
 			Expected: false,
 		},
+		"allow-downloads": {
+			Input:    "allow-downloads",
+			Expected: true,
+		},
 		"allow-forms": {
 			Input:    "allow-forms",
+			Expected: true,
+		},
+		"allow-modals": {
+			Input:    "allow-modals",
+			Expected: true,
+		},
+		"allow-orientation-lock": {
+			Input:    "allow-orientation-lock",
 			Expected: true,
 		},
 		"allow-pointer-lock": {
@@ -1110,6 +1131,14 @@ func TestIsSandboxSource(t *testing.T) {
 		},
 		"allow-popups": {
 			Input:    "allow-popups",
+			Expected: true,
+		},
+		"allow-popups-to-escape-sandbox": {
+			Input:    "allow-popups-to-escape-sandbox",
+			Expected: true,
+		},
+		"allow-presentation": {
+			Input:    "allow-presentation",
 			Expected: true,
 		},
 		"allow-same-origin": {
@@ -1122,6 +1151,14 @@ func TestIsSandboxSource(t *testing.T) {
 		},
 		"allow-top-navigation": {
 			Input:    "allow-top-navigation",
+			Expected: true,
+		},
+		"allow-top-navigation-by-user-activation": {
+			Input:    "allow-top-navigation-by-user-activation",
+			Expected: true,
+		},
+		"allow-top-navigation-to-custom-protocols": {
+			Input:    "allow-top-navigation-to-custom-protocols",
 			Expected: true,
 		},
 		"ALLOW-FORMS": {
