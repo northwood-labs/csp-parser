@@ -1,6 +1,6 @@
 # CSP Parser and Evaluator in Go
 
-The goal of this project is to be able to take a URL and one or more CSP headers, understand them correctly, and ultimately be able to provide education and actionable feedback for ensuring CSP provide the appropriate and intended level of security. This is the underlying library intended to make that ultimate goal possible.
+The goal of this project is to be able to take a URL and one or more CSP headers, understand them correctly, and ultimately be able to provide education and actionable feedback for ensuring the CSP policy provides the appropriate and intended level of security. This is the underlying library intended to make that ultimate goal possible.
 
 This code is not a web browser, so the parts of the spec about "blocking networking requests" aren't relevant. However, calling this out as what a web browser _would do_ can be helpful.
 
