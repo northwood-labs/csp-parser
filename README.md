@@ -20,4 +20,4 @@ Implements parsing and evaluation for [CSP2] (2016) and the [CSP3 working draft]
 > **PUBLIC INTERFACES ARE NOT STABLE YET.**
 
 [CSP2]: https://www.w3.org/TR/CSP2/
-[CSP3]: https://www.w3.org/TR/2024/WD-CSP3-20240424/
+[CSP3]: https://www.w3.org/TR/2024/WD-CSP3-20240613/

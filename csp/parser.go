@@ -277,7 +277,7 @@ quotations below.
 	'self', 'report-sample', 'strict-dynamic', 'unsafe-eval', 'unsafe-hashes',
 	'unsafe-inline', 'unsafe-allow-redirects', 'wasm-unsafe-eval'
 
-https://www.w3.org/TR/2024/WD-CSP3-20240424/#grammardef-keyword-source
+https://www.w3.org/TR/2024/WD-CSP3-20240613/#grammardef-keyword-source
 
 ----
 
