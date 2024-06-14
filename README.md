@@ -8,7 +8,7 @@ You should consider [web.dev: Content security policy](https://web.dev/articles/
 
 ## Maturity
 
-Implements parsing and evaluation for [CSP2] (2016) and the [CSP3 working draft][CSP3] (April 2024).
+Implements parsing and evaluation for [CSP2] (2016) and the [CSP3 working draft][CSP3] (June 2024).
 
 * [X] Make it work.
 * [ ] Make it right. (In-progress)
