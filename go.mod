@@ -7,7 +7,8 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/nlnwa/whatwg-url v0.4.1
 	github.com/northwood-labs/cli-helpers v0.0.0-20240514222150-ad603e1e5510
-	github.com/spf13/cobra v1.8.0
+	github.com/northwood-labs/golang-utils/grammar v0.0.0-20240520164218-e622991bbbf7
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 )
@@ -35,10 +36,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
-	github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
 	github.com/northwood-labs/archstring v0.0.0-20240514202917-e9357b4b91c8 // indirect
-	github.com/northwood-labs/debug v0.0.0-20240514204655-f938e2fa11e9 // indirect
-	github.com/northwood-labs/golang-utils/grammar v0.0.0-20240520164218-e622991bbbf7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
