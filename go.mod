@@ -2,10 +2,12 @@ module github.com/northwood-labs/csp-parser
 
 go 1.22.3
 
+toolchain go1.24.1
+
 require (
 	github.com/charmbracelet/log v0.4.1
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/nlnwa/whatwg-url v0.6.1
+	github.com/nlnwa/whatwg-url v0.6.2
 	github.com/northwood-labs/cli-helpers v0.0.0-20240514222150-ad603e1e5510
 	github.com/northwood-labs/golang-utils/grammar v0.0.0-20240520164218-e622991bbbf7
 	github.com/spf13/cobra v1.9.1
