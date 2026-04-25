@@ -218,7 +218,7 @@ https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
 func isSchemeSource(s string) bool {
 	// scheme_part   = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
 	// scheme-source = scheme-part ":"
-	reSchemePart := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+-.]*:$`)
+	reSchemePart := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+.-]*:$`)
 
 	return reSchemePart.MatchString(s)
 }
@@ -243,7 +243,7 @@ func isHostSource(s string) bool {
 	// path-part   = <https://datatracker.ietf.org/doc/html/rfc3986#section-3.3>
 	// port-part   = 1*DIGIT / "*"
 	reHostSource := regexp.MustCompile(
-		`^([a-zA-Z][a-zA-Z0-9+-.]*://)?(\*|(\*)?\.?([a-zA-Z0-9-]+))+(:(\*|[0-9]+))?(/[^/]+)*$`,
+		`^([a-zA-Z][a-zA-Z0-9+.-]*://)?(\*|(\*)?\.?([a-zA-Z0-9-]+))+(:(\*|[0-9]+))?(/[^/]+)*$`,
 	)
 
 	reIPv4Dumb := regexp.MustCompile(`^(([0-9]{1,3}[.]){3}[0-9]{1,3})$`)
